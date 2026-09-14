@@ -1,0 +1,10 @@
+.venv/
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+.env
+storage/*
+!storage/.gitkeep
+backend/storage/
+backend/test-results.xml
