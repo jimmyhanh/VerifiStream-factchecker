@@ -106,8 +106,8 @@ They also reject silent and fake videos. Integration tests skip if FFmpeg
 or FFprobe is absent; CI explicitly installs both.
 GitHub Actions runs the entire suite and starts a real Uvicorn server for
 an HTTP health smoke test. See docs/progress.md for observed execution status.
-Docker configuration must be checked separately with `docker compose up --build`;
-the backend workflow does not build the container.
+A separate CI job builds Docker Compose and uploads a generated video through
+the running container, verifying both FFmpeg availability and storage permissions.
 
 ## Layout
 - backend/app/api: HTTP limits

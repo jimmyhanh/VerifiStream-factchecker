@@ -40,3 +40,28 @@ jobs:
         with:
           name: backend-test-results
           path: backend/test-results.xml
+  container:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build and start development container
+        run: docker compose up --build -d
+      - name: Check health and real upload through container
+        run: |
+          for attempt in {1..30}; do
+            if curl --fail --silent http://127.0.0.1:8000/health; then
+              break
+            fi
+            sleep 1
+          done
+          curl --fail http://127.0.0.1:8000/health
+          docker compose exec -T backend ffmpeg -nostdin -y -v error -f lavfi -i color=c=blue:s=64x64:r=10:d=1 -f lavfi -i sine=frequency=440:duration=1 -c:v mpeg4 -c:a aac -shortest /tmp/sample.mp4
+          docker compose cp backend:/tmp/sample.mp4 /tmp/verifistream-sample.mp4
+          curl --fail -F "file=@/tmp/verifistream-sample.mp4;type=video/mp4" http://127.0.0.1:8000/videos > /tmp/verifistream-response.json
+          python -c 'import json; r=json.load(open("/tmp/verifistream-response.json")); assert r["status"]=="completed", r'
+      - name: Container logs and cleanup
+        if: always()
+        run: |
+          docker compose logs
+          docker compose down -v
