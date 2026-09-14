@@ -1,0 +1,17 @@
+services:
+  backend:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+    ports:
+      - "127.0.0.1:8000:8000"
+    environment:
+      STORAGE_ROOT: /srv/storage
+      MAX_VIDEO_BYTES: ${MAX_VIDEO_BYTES:-104857600}
+      MAX_DURATION_SECONDS: ${MAX_DURATION_SECONDS:-600}
+      PROCESS_TIMEOUT_SECONDS: ${PROCESS_TIMEOUT_SECONDS:-120}
+      MAX_CONCURRENT_UPLOADS: ${MAX_CONCURRENT_UPLOADS:-2}
+    volumes:
+      - media:/srv/storage
+volumes:
+  media:

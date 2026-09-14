@@ -1,0 +1,67 @@
+name: Backend tests
+on:
+  push:
+    branches: [main, milestone-1-video-ingestion]
+  pull_request:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install FFmpeg
+        run: sudo apt-get update && sudo apt-get install -y ffmpeg
+      - name: Install backend and test dependencies
+        run: python -m pip install -e './backend[dev]'
+      - name: Run all tests including real media integration
+        working-directory: backend
+        run: python -m pytest -q --junitxml=test-results.xml
+      - name: HTTP server smoke test
+        run: |
+          python -m uvicorn app.main:app --app-dir backend --host 127.0.0.1 --port 8000 &
+          SERVER_PID=$!
+          trap 'kill "$SERVER_PID"' EXIT
+          for attempt in {1..20}; do
+            if curl --fail --silent http://127.0.0.1:8000/health; then
+              exit 0
+            fi
+            sleep 1
+          done
+          exit 1
+      - name: Save test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: backend-test-results
+          path: backend/test-results.xml
+  container:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build and start development container
+        run: docker compose up --build -d
+      - name: Check health and real upload through container
+        run: |
+          for attempt in {1..30}; do
+            if curl --fail --silent http://127.0.0.1:8000/health; then
+              break
+            fi
+            sleep 1
+          done
+          curl --fail http://127.0.0.1:8000/health
+          docker compose exec -T backend ffmpeg -nostdin -y -v error -f lavfi -i color=c=blue:s=64x64:r=10:d=1 -f lavfi -i sine=frequency=440:duration=1 -c:v mpeg4 -c:a aac -shortest /tmp/sample.mp4
+          docker compose cp backend:/tmp/sample.mp4 /tmp/verifistream-sample.mp4
+          curl --fail -F "file=@/tmp/verifistream-sample.mp4;type=video/mp4" http://127.0.0.1:8000/videos > /tmp/verifistream-response.json
+          python -c 'import json; r=json.load(open("/tmp/verifistream-response.json")); assert r["status"]=="completed", r'
+      - name: Container logs and cleanup
+        if: always()
+        run: |
+          docker compose logs
+          docker compose down -v
