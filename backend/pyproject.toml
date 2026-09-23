@@ -13,9 +13,10 @@ dependencies = [
   "python-multipart>=0.0.20,<1",
 ]
 [project.optional-dependencies]
+transcription = ["faster-whisper==1.2.1", "av==16.1.0"]
 dev = ["pytest>=8.3,<9", "httpx>=0.28,<1"]
 [tool.setuptools.packages.find]
 include = ["app*"]
 [tool.pytest.ini_options]
 testpaths = ["tests"]
-markers = ["integration: requires real FFmpeg and FFprobe"]
+markers = ["integration: requires real FFmpeg and FFprobe", "asr: opt-in real model inference"]

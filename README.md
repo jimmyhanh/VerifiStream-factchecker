@@ -1,8 +1,7 @@
 # VerifiStream — evidence-based fact checker
 
-Semester project, September–December 2026. **Milestone 1 only:** uploaded video
-to extracted audio. Transcription, claims, retrieval, verification, confidence
-and the frontend are not implemented.
+Semester project, September–December 2026. **Milestones 1–2:** uploaded video to audio and timestamped transcription.
+Claims, retrieval, verification, confidence and the frontend are not implemented.
 
 ## Run with Docker (recommended)
 Install Docker with Compose, then run from the repository root:
@@ -10,7 +9,7 @@ Install Docker with Compose, then run from the repository root:
 ```sh
 git clone https://github.com/jimmyhanh/VerifiStream-factchecker.git
 cd VerifiStream-factchecker
-git checkout milestone-1-video-ingestion
+git checkout main
 docker compose up --build
 ```
 
@@ -31,7 +30,7 @@ From the repository root:
 ```sh
 python -m venv .venv
 source .venv/bin/activate
-python -m pip install -e './backend[dev]'
+python -m pip install -e './backend[dev,transcription]'
 python -m uvicorn app.main:app --app-dir backend --reload --host 127.0.0.1 --log-config backend/logging.json
 ```
 
@@ -138,4 +137,100 @@ uploads. Only the first audio stream is extracted; no language/track selection.
 Dependency ranges are bounded, not a fully locked reproducible environment yet.
 No political-bias scoring and no verification based on model memory.
 
-Next milestone: replaceable transcription adapter with timestamped segments.
+Next milestone: detect check-worthy claims from timestamped transcripts.
+
+## Milestone 2: timestamped transcription
+
+After merging the Milestone 2 PR, update from the repository root:
+
+```sh
+git pull origin main
+docker compose up --build
+```
+
+The existing media volume is reused. Do not run `docker compose down -v` if you
+want to preserve uploads, transcripts and downloaded models.
+
+Open http://localhost:8000/docs. Use an existing **actual video UUID** returned
+by POST /videos, not the documentation's Example Value.
+
+1. Expand **POST /videos/{video_id}/transcriptions**, click Try it out.
+2. Enter the video UUID and use request body `{"language":"en"}` for English,
+   `{"language":"vi"}` for Vietnamese, or `{}` to auto-detect the language.
+3. Execute and wait. First use downloads the model; later requests reuse it.
+4. HTTP 201 means a run was created. Check `status`: `completed` or `failed`.
+5. Read `text` and `result.segments`, each with `id`, `start`, `end`, `text`.
+   Times are seconds relative to the extracted audio/video timeline; segment
+   IDs are local to that run. These are estimated ASR timestamps, not forced alignment.
+6. GET /videos/{video_id}/transcript retrieves the latest **successful** run.
+   GET /videos/{video_id}/transcriptions lists all attempts, newest first.
+   GET /videos/{video_id}/transcriptions/{run_id} retrieves a specific attempt.
+
+PowerShell example (replace YOUR_VIDEO_UUID):
+
+```powershell
+$videoId = "YOUR_VIDEO_UUID"
+Invoke-RestMethod -Method Post -Uri "http://localhost:8000/videos/$videoId/transcriptions" -ContentType "application/json" -Body '{"language":"en"}'
+Invoke-RestMethod -Uri "http://localhost:8000/videos/$videoId/transcript"
+```
+
+An example segment shape (illustrative, not a result):
+```json
+{"id": 0, "start": 0.5, "end": 3.2, "text": "This is a sample sentence."}
+```
+
+### Local model and configuration
+Default: Faster Whisper 1.2.1, multilingual **base**, CPU, int8, four threads.
+No API key or external transcription API is used. Model files are downloaded
+from Hugging Face; audio stays inside your local process/container.
+The first run needs internet and additional disk/RAM. CPU speed varies; start
+with a short speech clip. No real-time speed guarantee.
+
+Set values in .env for Compose, then recreate with `docker compose up --build`:
+- TRANSCRIPTION_MODEL: tiny, base (default), or small. Larger models generally
+  cost more processing time and memory; validate accuracy on your own clips.
+- TRANSCRIPTION_MODEL_REVISION: main by default; use a model commit SHA to pin it.
+  An existing cached main snapshot is reused, including offline; change to an
+  explicit revision to upgrade reproducibly. Each result records its resolved SHA.
+- TRANSCRIPTION_TIMEOUT_SECONDS: 900 including model loading and inference.
+- TRANSCRIPTION_THREADS: 4 by default.
+- MODEL_CACHE: local Python path; Compose fixes this at /srv/storage/models.
+
+Local Python needs `python -m pip install -e './backend[dev,transcription]'`.
+PyAV is pinned to 16.1.0 because 18.1.0 crashed during import in the authoring
+runtime. Normal API and unit tests do not import the native speech engine.
+
+### Errors and limits
+- 404: unknown video or no successful transcript yet.
+- 409: extraction incomplete, or missing/invalid WAV.
+- 422: malformed request, invalid UUID/language format or unknown JSON fields.
+- 503 transcription_busy: another transcription is running; retry after it ends.
+- HTTP 201 with status failed: inspect error_code and error_message. Common codes
+  are model_unavailable, unsupported_language, transcription_timeout,
+  provider_unavailable, invalid_transcript and transcription_failed.
+
+Only one transcription runs per API process. POST waits for completion;
+GET/health remain available. The provider runs in a subprocess that is killed
+on timeout. There is no durable job queue or restart recovery yet. Reload/crash
+may leave a processing record; a new POST creates a separate attempt.
+Every attempt lives at storage/{video_id}/transcriptions/{run_id}.json.
+Retries preserve old results. Empty detected speech produces a completed empty
+transcript. ASR can mishear names, numbers, or speech and can hallucinate;
+transcripts are not verified claims and have no Evidence Confidence score.
+No diarization, word timestamps, translation, or frontend is added in M2.
+
+### Real model smoke test
+The normal suite can run without model downloads. To run the optional real-model
+API test, download the short JFK fixture supplied by whisper.cpp:
+
+```sh
+curl -L --fail -o /tmp/jfk.wav https://raw.githubusercontent.com/ggerganov/whisper.cpp/master/samples/jfk.wav
+ASR_TEST_AUDIO=/tmp/jfk.wav python -m pytest backend/tests -q
+```
+
+PowerShell: save the WAV to a local path, set `$env:ASR_TEST_AUDIO` to that path,
+then run `python -m pytest backend/tests -q`.
+CI enables this test and also transcribes spoken video through the built Docker
+container. It checks an expected keyword, timestamps and silence behavior; this
+is a smoke test, **not** an accuracy benchmark. See docs/progress.md for results.
+Upstream provider documentation: https://github.com/SYSTRAN/faster-whisper.
