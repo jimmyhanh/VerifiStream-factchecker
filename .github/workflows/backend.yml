@@ -1,7 +1,7 @@
 name: Backend tests
 on:
   push:
-    branches: [main, milestone-1-video-ingestion]
+    branches: [main, milestone-1-video-ingestion, milestone-2-transcription]
   pull_request:
   workflow_dispatch:
 permissions:
@@ -18,9 +18,14 @@ jobs:
       - name: Install FFmpeg
         run: sudo apt-get update && sudo apt-get install -y ffmpeg
       - name: Install backend and test dependencies
-        run: python -m pip install -e './backend[dev]'
+        run: python -m pip install -e './backend[dev,transcription]'
+      - name: Download public speech smoke fixture
+        run: curl -L --fail --retry 3 -o /tmp/jfk.wav https://raw.githubusercontent.com/ggerganov/whisper.cpp/master/samples/jfk.wav
       - name: Run all tests including real media integration
         working-directory: backend
+        env:
+          ASR_TEST_AUDIO: /tmp/jfk.wav
+          HF_HUB_DISABLE_XET: '1'
         run: python -m pytest -q --junitxml=test-results.xml
       - name: HTTP server smoke test
         run: |
@@ -60,6 +65,16 @@ jobs:
           docker compose cp backend:/tmp/sample.mp4 /tmp/verifistream-sample.mp4
           curl --fail -F "file=@/tmp/verifistream-sample.mp4;type=video/mp4" http://127.0.0.1:8000/videos > /tmp/verifistream-response.json
           python -c 'import json; r=json.load(open("/tmp/verifistream-response.json")); assert r["status"]=="completed", r'
+      - name: Real speech through container transcription API
+        run: |
+          curl -L --fail --retry 3 -o /tmp/jfk.wav https://raw.githubusercontent.com/ggerganov/whisper.cpp/master/samples/jfk.wav
+          docker compose cp /tmp/jfk.wav backend:/tmp/jfk.wav
+          docker compose exec -T backend ffmpeg -nostdin -y -v error -f lavfi -i color=c=blue:s=64x64:r=10 -i /tmp/jfk.wav -c:v mpeg4 -c:a aac -shortest /tmp/speech.mp4
+          docker compose cp backend:/tmp/speech.mp4 /tmp/speech.mp4
+          curl --fail -F "file=@/tmp/speech.mp4;type=video/mp4" http://localhost:8000/videos > /tmp/video.json
+          VIDEO_ID=$(python -c 'import json; print(json.load(open("/tmp/video.json"))["id"])')
+          curl --fail --max-time 900 -H 'Content-Type: application/json' -d '{"language":"en"}' "http://localhost:8000/videos/$VIDEO_ID/transcriptions" > /tmp/transcript.json
+          python -c 'import json; r=json.load(open("/tmp/transcript.json")); assert r["status"]=="completed", r; assert "country" in r["text"].lower(), r'
       - name: Container logs and cleanup
         if: always()
         run: |

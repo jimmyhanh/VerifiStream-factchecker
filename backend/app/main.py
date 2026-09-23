@@ -11,17 +11,29 @@ from app.shared.config import Settings
 from app.shared.errors import ServiceError
 from app.storage.local import LocalVideoStorage, VideoStorage
 from app.videos.service import VideoService
+from app.models.transcript import TranscriptRequest, TranscriptRun
+from app.transcription.provider import TranscriptionProvider, FasterWhisperProvider
+from app.transcription.repository import TranscriptRepository, JsonTranscriptRepository
+from app.transcription.service import TranscriptionService
 
 def create_app(
     settings: Settings | None = None, *,
     storage: VideoStorage | None = None,
     repository: VideoRepository | None = None,
     media: MediaProcessor | None = None,
+    transcription_provider: TranscriptionProvider | None = None,
+    transcript_repository: TranscriptRepository | None = None,
 ) -> FastAPI:
     config = settings or Settings.from_env()
+    video_storage = storage or LocalVideoStorage(config.storage_root)
+    video_repository = repository or JsonVideoRepository(config.storage_root)
+    transcription = TranscriptionService(
+        config, video_repository, video_storage,
+        transcript_repository or JsonTranscriptRepository(config.storage_root),
+        transcription_provider or FasterWhisperProvider(config),
+    )
     service = VideoService(
-        config, storage or LocalVideoStorage(config.storage_root),
-        repository or JsonVideoRepository(config.storage_root),
+        config, video_storage, video_repository,
         media or FFmpegProcessor(config),
     )
     app = FastAPI(title="VerifiStream", version="0.1.0")
@@ -71,6 +83,24 @@ def create_app(
     @app.get("/videos/{video_id}", response_model=VideoRecord)
     def get_video(video_id: UUID) -> VideoRecord:
         return service.get(video_id)
+
+    @app.post('/videos/{video_id}/transcriptions', response_model=TranscriptRun, status_code=201)
+    def transcribe_video(video_id: UUID, request: TranscriptRequest) -> TranscriptRun:
+        """Create a new run; waits for completion. Send {} to auto-detect language."""
+        return transcription.create(video_id, request)
+
+    @app.get('/videos/{video_id}/transcriptions', response_model=list[TranscriptRun])
+    def list_transcriptions(video_id: UUID) -> list[TranscriptRun]:
+        return transcription.list(video_id)
+
+    @app.get('/videos/{video_id}/transcriptions/{run_id}', response_model=TranscriptRun)
+    def get_transcription(video_id: UUID, run_id: UUID) -> TranscriptRun:
+        return transcription.get(video_id, run_id)
+
+    @app.get('/videos/{video_id}/transcript', response_model=TranscriptRun)
+    def latest_transcript(video_id: UUID) -> TranscriptRun:
+        """Latest successful run; use /transcriptions for failed/in-progress attempts."""
+        return transcription.latest(video_id)
 
     return app
 

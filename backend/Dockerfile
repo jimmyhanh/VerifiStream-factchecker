@@ -5,7 +5,7 @@ WORKDIR /srv
 COPY backend/pyproject.toml ./backend/pyproject.toml
 COPY backend/app ./backend/app
 COPY backend/logging.json ./backend/logging.json
-RUN pip install --no-cache-dir ./backend \
+RUN pip install --no-cache-dir './backend[transcription]' \
     && useradd --create-home appuser && mkdir /srv/storage && chown appuser /srv/storage
 USER appuser
 ENV STORAGE_ROOT=/srv/storage

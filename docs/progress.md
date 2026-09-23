@@ -15,7 +15,7 @@
 - [x] Record exact tested commit and results; no failing tests.
 - [x] Verify Docker build and real video upload through running container.
 - [x] Milestone 1 implementation and automated validation complete.
-- [ ] User review / merge of draft PR #1.
+- [x] PR #1 merged; user verified upload and UUID lookup locally.
 
 ## Observed validation — September 14, 2026
 Tested implementation commit: ad258a0c88ec8c8a077342920fdcd38867a6a32b.
@@ -37,4 +37,16 @@ no authentication, durable jobs, crash recovery or retention management.
 See README and architecture for deployment prerequisites.
 
 ## Next
-M2: audio to timestamped transcript. Not started.
+M2 in progress; M3 (claim detection) not started.
+
+## Milestone 2
+- [x] Inspect merged main (398b041) and document implementation plan.
+- [x] Add transcript schemas, provider/repository interfaces and local adapters.
+- [x] Add timestamped local CPU transcription with bounded subprocess execution.
+- [x] Preserve historical runs and version/provenance metadata.
+- [x] Add create/list/specific/latest-successful transcript APIs.
+- [x] Update Docker, environment example and usage documentation.
+- [x] Add API/schema/error tests; 51 tests passed before real-model test was added.
+- [ ] Complete real-model speech/silence validation and record results.
+- [ ] Verify Docker/CI and open review PR.
+

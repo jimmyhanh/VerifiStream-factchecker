@@ -40,3 +40,25 @@ Introduce PostgreSQL migrations and durable jobs; use stage-specific tasks with 
 Verification runs are append-only: preserve model/provider version, prompt version, retrieval version, confidence version, timestamp, immutable evidence snapshot and content hash. Algorithm changes create a new run.
 Evidence stores URL, publisher, title, publication date (nullable when unknown), source type, primary/secondary classification, passage and offsets, retrieval time, relevance and directness. Map each passage to an atomic proposition. Track original-report provenance/independence clusters so syndicated copies do not count as independent confirmation.
 Confidence is a deterministic tested module separate from the LLM relationship/verdict adapter, exposing signal contributions and algorithm version. Calibrate later against held-out labeled evaluation data.
+
+## Milestone 2 implementation
+TranscriptionService depends on VideoRepository, VideoStorage,
+TranscriptRepository and TranscriptionProvider. Existing upload endpoints and
+video schemas are unchanged. Transcript runs are separate resources; terminal
+runs are never overwritten. Local atomic JSON remains a single-process adapter.
+
+FasterWhisperProvider launches an internal subprocess, with a wall-clock timeout
+covering model download and lazy inference iteration. This is a synchronous
+provider boundary, not an asynchronous worker system. One admission slot limits
+CPU contention. FastAPI runs the orchestration outside the event loop.
+
+Results retain audio SHA-256, requested model/revision, resolved Hugging Face
+snapshot revision, provider and engine versions, decoding parameters, adapter
+version, timestamps, segment IDs and elapsed seconds. Empty speech is a valid
+empty result; it has no factual or evidence confidence interpretation. Versions
+and hashes support auditing but cannot guarantee bit-for-bit ASR output across
+hardware. Model files are cached under the existing persistent media volume.
+
+The future PostgreSQL/job implementation must provide atomic admission and
+idempotency across replicas; current JSON writes and semaphore are process-local.
+See milestone-2.md for the implementation sequence and README for API semantics.
