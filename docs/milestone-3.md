@@ -36,8 +36,9 @@ improvements; do not claim broad semantic claim-detection quality from heuristic
 ## Implemented and observed
 Local regression: 73 passed, 1 optional ASR test skipped, 1 upstream warning.
 Real FFmpeg + fixture transcription + real claim detector pipeline passed. Real
-Uvicorn HTTP create/get trial passed with a synthetic stored transcript. Full
-speech model/container coverage is delegated to the existing GitHub CI jobs.
+Uvicorn HTTP create/get trial passed with a synthetic stored transcript. GitHub CI run
+35957251020 subsequently passed 74 tests with no skips (6.95s) and passed the
+Docker upload/transcription/extraction smoke check on implementation 576a832.
 Synthetic held-out exact-span precision 90.0%, recall 64.3%, F1 75.0%; all errors
 retained in evaluation/claims/baseline-v1.json. Semantic recall is a known gap,
 not hidden by the completion status of a processing run.

@@ -84,14 +84,14 @@ Next: M3 baseline (see below), followed by M4 atomic propositions.
 - [x] Local tests: 73 passed, 1 skipped, 1 upstream test-client warning in 1.43s.
 - [x] Real Uvicorn HTTP health/create/retrieve smoke trial on a synthetic saved transcript.
 - [x] README, architecture, environment/Compose and CI updated.
-- [ ] Observe new GitHub CI/container validation.
+- [x] CI: 74 tests passed with real ASR; Docker upload/transcription/claim routes passed.
 - [ ] User review/merge and local claim extraction trial.
 
 The local skip is the opt-in real speech-model regression test; the new extraction
 provider itself is real and deterministic, not mocked. Real FFmpeg ingestion plus
 injected transcription and real extraction passed locally. Docker is unavailable
-in the authoring environment; CI is configured to test the container, real ASR and
-new claim endpoints. No claim of those new CI results until observed.
+in the authoring environment; the GitHub container job was executed and verified
+from its logs, including real ASR and the new claim endpoints.
 
 Held-out synthetic baseline: 9 TP, 1 FP, 5 FN; precision 90.0%, recall 64.3%,
 F1 75.0%. Development: 12 TP, 1 FP, 0 FN. These single-author synthetic labels
@@ -100,3 +100,18 @@ Raw errors are retained; rules were not tuned against the held-out report.
 M3 delivers an experimental detection baseline, not broad semantic accuracy.
 No factual verification or Evidence Confidence is implemented. Next: M4, with
 semantic-provider and independent-label quality improvements tracked separately.
+
+### Observed M3 CI validation
+Tested implementation: 576a832e5ad6534f3c4b12eb73e2fb68fadcfa99.
+[CI run 35957251020](https://github.com/jimmyhanh/VerifiStream-factchecker/actions/runs/35957251020):
+74 passed, 0 failed, 0 skipped, 1 upstream test-client warning; 6.95 seconds on
+Python 3.11. Includes real speech/silence inference and FFmpeg integration.
+Both test and container jobs succeeded. The container accepted uploaded video,
+transcribed the speech fixture, created a completed claim run, and retrieved the
+same persisted run through HTTP. The JFK exhortation fixture yielded zero claim
+candidates, which is a valid empty result; the positive factual extraction path
+is covered by the separate real-FFmpeg/injected-transcript test and HTTP trial.
+Evaluation artifact was uploaded by CI. Upstream GitHub Action Node deprecation
+notices remain non-blocking. This final update only records validation in docs.
+
+Draft PR: https://github.com/jimmyhanh/VerifiStream-factchecker/pull/3
