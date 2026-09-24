@@ -6,6 +6,7 @@ services:
     ports:
       - "127.0.0.1:8000:8000"
     environment:
+      MAX_CLAIM_TRANSCRIPT_CHARS: ${MAX_CLAIM_TRANSCRIPT_CHARS:-100000}
       STORAGE_ROOT: /srv/storage
       MODEL_CACHE: /srv/storage/models
       TRANSCRIPTION_MODEL: ${TRANSCRIPTION_MODEL:-base}

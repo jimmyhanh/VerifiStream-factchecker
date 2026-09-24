@@ -1,28 +1,38 @@
-# September–December 2026 roadmap
+# Revised roadmap through November 13, 2026
 
-Dates are planning targets; acceptance gates determine readiness. Implement one milestone at a time.
-The reliable uploaded-video demonstration has priority over live processing.
+Revised at the user's request to target a demonstrable uploaded-video MVP before
+mid-November. November 13 is the working delivery target; November 14 is a buffer,
+not a confirmed course deadline. The original December route is retained in git
+history. Work milestone by milestone; acceptance gates determine readiness.
 
-| Dates | Milestones | Acceptance gate |
+| Dates | Milestones | Acceptance gate/status |
 |---|---|---|
-| Sep 14–27 | M1: upload and audio extraction | Validation, status persistence, failure cleanup, real FFmpeg tests and setup docs |
-| Sep 28–Oct 11 | M2: timestamped transcription | Replaceable provider, timestamp alignment, failures and cost captured |
-| Oct 12–18 | M3: check-worthy claims | Versioned extraction output and precision/recall baseline |
-| Oct 19–25 | M4: atomic propositions | Compound and causal claims split with transcript linkage |
-| Oct 26–Nov 1 | M5: multi-source retrieval | Source metadata, retrieved snapshots and citation provenance |
-| Nov 2–8 | M6: relationship mapping | Passages map to precise proposition IDs; irrelevant evidence excluded |
-| Nov 9–15 | M7: ranking and independence | Repeated reports clustered, directness/relevance evaluated |
-| Nov 16–19 | M8: evidence-based verification | Five evidence statuses; insufficient evidence fallback; append-only runs |
-| Nov 20–22 | M9: Evidence Confidence | Deterministic versioned scoring, contributions exposed and tested |
-| Nov 23–Dec 6 | M10: dashboard | Upload-to-evidence inspection demo with citations and uncertainty |
-| Dec 7–13 | Stabilization and documentation | Evaluation report, reproducible demo, recorded fallback, final report |
-| After core demo is reliable | M11: jobs/caching/scaling | PostgreSQL, durable tasks, idempotent retries and measured bottlenecks |
-| Stretch / next term | M12: near-real-time | Chunk boundaries, revisions, latency budget and backpressure |
+| Completed | M1: upload/audio; M2: transcription | Merged, tested, exercised locally |
+| Sep 23–25 | Baseline and fixtures | Clean setup, saved demo clips, progress reconciliation |
+| Sep 26–Oct 2 | M3: check-worthy candidates | English heuristic implemented early; versioned source spans, measured precision/recall; semantic quality remains limited |
+| Oct 3–7 | M4: atomic propositions | Preserve qualifiers, split compound/causal assertions, link to source |
+| Oct 8–15 | M5: evidence retrieval | Source metadata, exact passages/snapshots, failure handling |
+| Oct 16–20 | M6: relationship mapping | Five relationship labels tied to proposition/passage IDs |
+| Oct 21–24 | M7: ranking/independence | Directness/relevance and common-origin grouping |
+| Oct 25–29 | M8: verification | Five statuses from retrieved evidence, append-only runs |
+| Oct 30–Nov 2 | M9: Evidence Confidence | Separate deterministic versioned experimental scorer |
+| Nov 3–7 | M10: dashboard | Upload-to-evidence inspection, uncertainty, citations/history |
+| Nov 8–10 | Integration/evaluation | End-to-end regression and labeled results |
+| Nov 11–13 | Freeze and delivery | Fresh setup rehearsal, report, presentation, recorded fallback |
+| Nov 14 | Contingency | Release blockers only |
+| After reliable MVP | M11: jobs/caching/scaling | Measured bottlenecks, PostgreSQL/durable tasks/object storage |
+| Deferred | M12: near-real-time | Chunk boundaries, revisions, latency/backpressure |
 
-## Semester risk management
-- Keep demo videos short and preserve provider-independent fixtures.
-- Build evaluation fixtures with each relevant milestone.
-- If latency makes HTTP processing unreliable, advance the minimal durable-job
-  portion of M11 before the dashboard; defer optional caching/scaling.
-- No Kubernetes, Kafka, or separate microservices for this semester.
-- Final demonstration target: Dec 13; adjust when the course submission date is known.
+## Scope and risk management
+- Planning assumption: one developer with roughly 15–20 focused hours/week.
+- Short English demo videos, around 1–3 minutes; inspect/select 3–5 candidates.
+  This is a demo scope, not a change to the current upload limit.
+- Preserve transparency, source lineage and failure handling when reducing scope.
+- By October 15 retrieval must work; by October 29 backend verification must work;
+  by November 7 the dashboard must complete the workflow.
+- Move minimal durable-job/database work earlier if HTTP latency becomes unreliable.
+- Label cached evidence and experimental scores honestly. Do not claim calibration
+  from a small dataset or use the number of websites as source independence.
+- No live processing, Kubernetes, Kafka, or premature microservices for this demo.
+- Continue collecting evaluation fixtures at each milestone; M3's synthetic labels
+  need independently reviewed real transcript examples before broad quality claims.

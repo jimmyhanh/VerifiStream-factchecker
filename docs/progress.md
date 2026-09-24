@@ -37,7 +37,8 @@ no authentication, durable jobs, crash recovery or retention management.
 See README and architecture for deployment prerequisites.
 
 ## Next
-M2 in progress; M3 (claim detection) not started.
+M1–M2 merged and exercised locally. M3 English heuristic baseline implemented;
+validation details below. M4 not started.
 
 ## Milestone 2
 - [x] Inspect merged main (398b041) and document implementation plan.
@@ -50,7 +51,7 @@ M2 in progress; M3 (claim detection) not started.
 - [x] Real-model speech/silence validation: 52 tests passed locally (26.00s).
 - [x] CI: 52 passed (7.17s); Docker speech transcription and HTTP checks passed.
 - [x] Open draft PR #2 for review.
-- [ ] User review/merge and local transcription trial.
+- [x] PR #2 merged as 36ab8ad; user screenshots confirm local transcription and retrieval.
 
 
 ### Milestone 2 observed validation — September 23, 2026
@@ -68,4 +69,34 @@ workspace's SOCKS proxy additionally required socksio locally; normal GitHub CI
 and the Docker container succeeded without that workspace-only dependency.
 This final documentation update changes no application or test code.
 PR: https://github.com/jimmyhanh/VerifiStream-factchecker/pull/2
-Next: M3, check-worthy claim detection (not started).
+Next: M3 baseline (see below), followed by M4 atomic propositions.
+
+
+## Milestone 3 — September 24, 2026
+- [x] Inspect merged main 36ab8ad; write docs/milestone-3.md before code.
+- [x] English deterministic ClaimProvider baseline with explicit limitations.
+- [x] Exact source spans, enclosing segment timestamps, no invented quote text.
+- [x] Provider/repository interfaces, immutable run history and snapshots/hashes.
+- [x] Create/list/specific/latest-successful extraction APIs.
+- [x] Input/output bounds, unsupported-language errors, process-local admission.
+- [x] API/error/concurrency/real FFmpeg pipeline tests and evaluation metric test.
+- [x] Synthetic development/held-out dataset and reproducible exact-span report.
+- [x] Local tests: 73 passed, 1 skipped, 1 upstream test-client warning in 1.43s.
+- [x] Real Uvicorn HTTP health/create/retrieve smoke trial on a synthetic saved transcript.
+- [x] README, architecture, environment/Compose and CI updated.
+- [ ] Observe new GitHub CI/container validation.
+- [ ] User review/merge and local claim extraction trial.
+
+The local skip is the opt-in real speech-model regression test; the new extraction
+provider itself is real and deterministic, not mocked. Real FFmpeg ingestion plus
+injected transcription and real extraction passed locally. Docker is unavailable
+in the authoring environment; CI is configured to test the container, real ASR and
+new claim endpoints. No claim of those new CI results until observed.
+
+Held-out synthetic baseline: 9 TP, 1 FP, 5 FN; precision 90.0%, recall 64.3%,
+F1 75.0%. Development: 12 TP, 1 FP, 0 FN. These single-author synthetic labels
+are not independent annotations or a representative real-video benchmark.
+Raw errors are retained; rules were not tuned against the held-out report.
+M3 delivers an experimental detection baseline, not broad semantic accuracy.
+No factual verification or Evidence Confidence is implemented. Next: M4, with
+semantic-provider and independent-label quality improvements tracked separately.

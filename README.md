@@ -1,7 +1,8 @@
 # VerifiStream — evidence-based fact checker
 
-Semester project, September–December 2026. **Milestones 1–2:** uploaded video to audio and timestamped transcription.
-Claims, retrieval, verification, confidence and the frontend are not implemented.
+Semester project, September–December 2026. **Milestones 1–3:** uploaded video, audio, timestamped transcription and an experimental
+English check-worthy claim detector. Atomic decomposition, retrieval, verification,
+Evidence Confidence and the frontend are not implemented.
 
 ## Run with Docker (recommended)
 Install Docker with Compose, then run from the repository root:
@@ -137,7 +138,7 @@ uploads. Only the first audio stream is extracted; no language/track selection.
 Dependency ranges are bounded, not a fully locked reproducible environment yet.
 No political-bias scoring and no verification based on model memory.
 
-Next milestone: detect check-worthy claims from timestamped transcripts.
+Next milestone: decompose extracted candidates into atomic propositions.
 
 ## Milestone 2: timestamped transcription
 
@@ -234,3 +235,101 @@ CI enables this test and also transcribes spoken video through the built Docker
 container. It checks an expected keyword, timestamps and silence behavior; this
 is a smoke test, **not** an accuracy benchmark. See docs/progress.md for results.
 Upstream provider documentation: https://github.com/SYSTRAN/faster-whisper.
+
+## Milestone 3: check-worthy claim candidates
+
+This is a **local English rule-based baseline**, not an LLM verifier. It detects
+some numerical, causal and factual-event assertions and excludes obvious
+questions/opinions/instructions/forecasts. It needs no extra dependency, model
+or API key. It misses valid claims and can select non-claims. No factual verdict,
+political-bias score, atomic decomposition or Evidence Confidence is produced.
+
+After merging M3, run from your existing repository:
+
+```powershell
+git pull origin main
+docker compose up --build
+```
+
+Keep the existing media volume (do not use `down -v`). Existing completed English
+transcripts work without uploading or transcribing again.
+
+At http://localhost:8000/docs:
+
+1. Copy the **actual video UUID** from your upload response.
+2. Execute **POST /videos/{video_id}/claim-extractions** with `{}`. This resolves
+   the latest completed transcript once and records its exact run ID.
+3. Check `status` in the 201 response. `completed` means extraction finished,
+   not that any candidate is true. An empty `candidates` list is valid and does
+   not establish that no factual assertions exist.
+4. Inspect each candidate's `quote`, `segment_ids`, `start_seconds`, `end_seconds`,
+   `signals`, `reason`, and `needs_context`. The context flag is heuristic.
+5. **GET /videos/{video_id}/claims** returns the latest successful extraction.
+   It may refer to an older transcript: inspect `transcript_run_id`. New
+   transcriptions do not automatically trigger extraction.
+6. **GET /videos/{video_id}/claim-extractions** lists all attempts.
+   **GET /videos/{video_id}/claim-extractions/{run_id}** reads one attempt.
+
+To target a specific transcript, use `{"transcript_run_id":"ACTUAL_TRANSCRIPT_RUN_UUID"}`.
+The video's UUID, the transcript run's UUID, and the claim extraction run's UUID
+are different identifiers. Swagger Example Values are not real records.
+
+PowerShell (replace the placeholder):
+
+```powershell
+$videoId = "YOUR_ACTUAL_VIDEO_UUID"
+Invoke-RestMethod -Method Post -Uri "http://localhost:8000/videos/$videoId/claim-extractions" -ContentType "application/json" -Body '{}'
+Invoke-RestMethod -Uri "http://localhost:8000/videos/$videoId/claims"
+```
+
+### Exact source linkage and audit trail
+
+Canonical transcript text is `' '.join(segment.text for segment in segments)`.
+`char_start` and `char_end` are zero-based, half-open **Python Unicode character**
+offsets into that text, not byte offsets or JavaScript UTF-16 indices. `quote`
+is that exact slice. The service derives segment IDs and timestamps from the
+source, rejecting out-of-range, overlapping, unordered or word-splitting spans.
+Times cover entire intersecting ASR segments; they are not exact word timing.
+Compound statements and repeated occurrences are intentionally preserved for M4.
+
+Each attempt stores a full transcript-result snapshot, canonical JSON SHA-256,
+source transcript run UUID, provider/rules version and parameters, pipeline
+version, start/finish times and elapsed seconds. Model and prompt versions are
+null because this provider uses neither. Terminal runs cannot be overwritten;
+retries get new IDs. Records live in
+`storage/{video_id}/claim-extractions/{run_id}.json` (inside the Docker volume
+when using Compose). No raw quotes are written to processing logs.
+
+### Errors and bounds
+
+- 404: unknown video/run, no successful transcript, or no successful extraction.
+- 409: explicitly selected transcript is incomplete or failed.
+- 422: malformed request/UUID, extra fields, or non-English/unknown transcript
+  language with nonempty speech (`unsupported_claim_language`). Empty silence
+  transcripts may have unknown language and still produce an empty result.
+- 413: canonical transcript exceeds `MAX_CLAIM_TRANSCRIPT_CHARS` (default 100000).
+- 503: extraction capacity busy or storage failure.
+- 201 with `status: failed`: inspect `invalid_claim_output` or
+  `claim_extraction_failed`; a failed retry does not hide prior success.
+
+Only one extraction runs per process and POST waits for it. The bundled rules
+make no network calls; a future remote provider must add its own bounded timeout.
+No durable queue/restart recovery or production multi-process coordination is
+added. History endpoints return full snapshots without pagination; long-running
+production use will need pagination, retention and database-backed storage.
+
+### Evaluation baseline
+
+```powershell
+python -m pytest backend/tests -q
+python evaluation/claims/evaluate.py
+```
+
+Run after the documented editable dev install. The dataset has 24 synthetic
+examples (48 sentences), split into development and held-out cases. Exact-span
+held-out precision is **90.0%**, recall **64.3%**, F1 **75.0%** (9 TP, 1 FP,
+5 FN). Labels are authored fixtures, not independently annotated real video
+examples. These are not general accuracy estimates. See
+[evaluation/claims/README.md](evaluation/claims/README.md) and the raw error report.
+A semantic provider and independently labeled real transcripts remain quality
+improvements. Next planned milestone: M4 atomic decomposition.
