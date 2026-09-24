@@ -1,0 +1,343 @@
+{
+  "version": "synthetic-claims-v1",
+  "label_policy": "Select externally checkable past/present assertions, including attributed/causal/compound assertions. Exclude questions, opinions, instructions, wishes, conditionals and forecasts. Labels do not state truth.",
+  "provenance": "Authored synthetic English fixtures, not independent human annotation; held-out split not used to tune rules-v1.",
+  "cases": [
+    {
+      "id": "development-01",
+      "split": "development",
+      "sentences": [
+        {
+          "text": "The city opened 3 schools in 2024.",
+          "check_worthy": true
+        },
+        {
+          "text": "I love this city.",
+          "check_worthy": false
+        }
+      ]
+    },
+    {
+      "id": "development-02",
+      "split": "development",
+      "sentences": [
+        {
+          "text": "Unemployment fell from 5% to 4%.",
+          "check_worthy": true
+        },
+        {
+          "text": "Did unemployment fall?",
+          "check_worthy": false
+        }
+      ]
+    },
+    {
+      "id": "development-03",
+      "split": "development",
+      "sentences": [
+        {
+          "text": "The council passed the housing bill.",
+          "check_worthy": true
+        },
+        {
+          "text": "Please subscribe to our channel.",
+          "check_worthy": false
+        }
+      ]
+    },
+    {
+      "id": "development-04",
+      "split": "development",
+      "sentences": [
+        {
+          "text": "The policy created 500 jobs and reduced unemployment by 20%.",
+          "check_worthy": true
+        },
+        {
+          "text": "This is the best policy.",
+          "check_worthy": false
+        }
+      ]
+    },
+    {
+      "id": "development-05",
+      "split": "development",
+      "sentences": [
+        {
+          "text": "The factory closed because demand fell.",
+          "check_worthy": true
+        },
+        {
+          "text": "I hope the factory reopens.",
+          "check_worthy": false
+        }
+      ]
+    },
+    {
+      "id": "development-06",
+      "split": "development",
+      "sentences": [
+        {
+          "text": "The company employs two thousand people.",
+          "check_worthy": true
+        },
+        {
+          "text": "Imagine a city without cars.",
+          "check_worthy": false
+        }
+      ]
+    },
+    {
+      "id": "development-07",
+      "split": "development",
+      "sentences": [
+        {
+          "text": "The policy did not create 500 jobs.",
+          "check_worthy": true
+        },
+        {
+          "text": "The government should create more jobs.",
+          "check_worthy": false
+        }
+      ]
+    },
+    {
+      "id": "development-08",
+      "split": "development",
+      "sentences": [
+        {
+          "text": "Dr. Lee reported inflation was 4.5%.",
+          "check_worthy": true
+        },
+        {
+          "text": "Thank you for watching.",
+          "check_worthy": false
+        }
+      ]
+    },
+    {
+      "id": "development-09",
+      "split": "development",
+      "sentences": [
+        {
+          "text": "It caused unemployment to rise.",
+          "check_worthy": true
+        },
+        {
+          "text": "What caused unemployment to rise?",
+          "check_worthy": false
+        }
+      ]
+    },
+    {
+      "id": "development-10",
+      "split": "development",
+      "sentences": [
+        {
+          "text": "The bill was signed in 2023.",
+          "check_worthy": true
+        },
+        {
+          "text": "I think the bill is wonderful.",
+          "check_worthy": false
+        }
+      ]
+    },
+    {
+      "id": "development-11",
+      "split": "development",
+      "sentences": [
+        {
+          "text": "The plant produces solar panels.",
+          "check_worthy": true
+        },
+        {
+          "text": "Prices will fall next year.",
+          "check_worthy": false
+        }
+      ]
+    },
+    {
+      "id": "development-12",
+      "split": "development",
+      "sentences": [
+        {
+          "text": "The museum is located in Riverton.",
+          "check_worthy": true
+        },
+        {
+          "text": "My favorite number is 12.",
+          "check_worthy": false
+        }
+      ]
+    },
+    {
+      "id": "held_out-01",
+      "split": "held_out",
+      "sentences": [
+        {
+          "text": "The budget increased by 12% last year.",
+          "check_worthy": true
+        },
+        {
+          "text": "Why was the budget increased by 12%?",
+          "check_worthy": false
+        }
+      ]
+    },
+    {
+      "id": "held_out-02",
+      "split": "held_out",
+      "sentences": [
+        {
+          "text": "The hospital treated 300 patients.",
+          "check_worthy": true
+        },
+        {
+          "text": "We should support the hospital.",
+          "check_worthy": false
+        }
+      ]
+    },
+    {
+      "id": "held_out-03",
+      "split": "held_out",
+      "sentences": [
+        {
+          "text": "The bridge collapsed in 2019.",
+          "check_worthy": true
+        },
+        {
+          "text": "That bridge is beautiful.",
+          "check_worthy": false
+        }
+      ]
+    },
+    {
+      "id": "held_out-04",
+      "split": "held_out",
+      "sentences": [
+        {
+          "text": "The town banned diesel vehicles.",
+          "check_worthy": true
+        },
+        {
+          "text": "I wish the town had better buses.",
+          "check_worthy": false
+        }
+      ]
+    },
+    {
+      "id": "held_out-05",
+      "split": "held_out",
+      "sentences": [
+        {
+          "text": "Solar panels contain silicon.",
+          "check_worthy": true
+        },
+        {
+          "text": "The town has three public libraries.",
+          "check_worthy": true
+        }
+      ]
+    },
+    {
+      "id": "held_out-06",
+      "split": "held_out",
+      "sentences": [
+        {
+          "text": "The company owns the harbor.",
+          "check_worthy": true
+        },
+        {
+          "text": "Buy this product for 20 dollars.",
+          "check_worthy": false
+        }
+      ]
+    },
+    {
+      "id": "held_out-07",
+      "split": "held_out",
+      "sentences": [
+        {
+          "text": "There were no deaths during the trial.",
+          "check_worthy": true
+        },
+        {
+          "text": "This is terrible news.",
+          "check_worthy": false
+        }
+      ]
+    },
+    {
+      "id": "held_out-08",
+      "split": "held_out",
+      "sentences": [
+        {
+          "text": "The mayor said the city added 800 jobs.",
+          "check_worthy": true
+        },
+        {
+          "text": "The city might add 800 jobs next year.",
+          "check_worthy": false
+        }
+      ]
+    },
+    {
+      "id": "held_out-09",
+      "split": "held_out",
+      "sentences": [
+        {
+          "text": "A flood caused the road closure.",
+          "check_worthy": true
+        },
+        {
+          "text": "Does flooding cause road closures?",
+          "check_worthy": false
+        }
+      ]
+    },
+    {
+      "id": "held_out-10",
+      "split": "held_out",
+      "sentences": [
+        {
+          "text": "Every student received a laptop.",
+          "check_worthy": true
+        },
+        {
+          "text": "The number 7 is lucky.",
+          "check_worthy": false
+        }
+      ]
+    },
+    {
+      "id": "held_out-11",
+      "split": "held_out",
+      "sentences": [
+        {
+          "text": "The company reported a loss of 2 million dollars.",
+          "check_worthy": true
+        },
+        {
+          "text": "This plan costs 40 dollars and includes 3 services.",
+          "check_worthy": true
+        }
+      ]
+    },
+    {
+      "id": "held_out-12",
+      "split": "held_out",
+      "sentences": [
+        {
+          "text": "If the policy created 500 jobs, I would support it.",
+          "check_worthy": false
+        },
+        {
+          "text": "The city reduced emissions by 30%.",
+          "check_worthy": true
+        }
+      ]
+    }
+  ]
+}

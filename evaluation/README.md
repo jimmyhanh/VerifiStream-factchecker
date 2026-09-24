@@ -8,3 +8,7 @@ Split development and held-out cases; prevent source/claim leakage.
 Track extraction precision/recall, atomic decomposition, retrieval success,
 relevance, citation correctness, verdict accuracy, confidence calibration,
 latency and provider cost. Evidence Confidence is not probability of truth.
+
+## Available now
+The M3 candidate selection baseline is in [claims/README.md](claims/README.md).
+Its synthetic precision/recall figures do not evaluate factual verification.

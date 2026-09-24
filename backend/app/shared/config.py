@@ -14,6 +14,7 @@ class Settings(BaseModel):
     model_cache: Path = Path('storage/models')
     transcription_timeout_seconds: int = Field(default=900, gt=0)
     transcription_threads: int = Field(default=4, gt=0, le=32)
+    max_claim_transcript_chars: int = Field(default=100000, gt=0, le=1000000)
     ffmpeg: str = "ffmpeg"
     ffprobe: str = "ffprobe"
 
@@ -30,6 +31,7 @@ class Settings(BaseModel):
             model_cache=os.getenv('MODEL_CACHE', 'storage/models'),
             transcription_timeout_seconds=os.getenv('TRANSCRIPTION_TIMEOUT_SECONDS', '900'),
             transcription_threads=os.getenv('TRANSCRIPTION_THREADS', '4'),
+            max_claim_transcript_chars=os.getenv('MAX_CLAIM_TRANSCRIPT_CHARS', '100000'),
             ffmpeg=os.getenv("FFMPEG_BINARY", "ffmpeg"),
             ffprobe=os.getenv("FFPROBE_BINARY", "ffprobe"),
         )

@@ -16,6 +16,12 @@ from app.transcription.provider import TranscriptionProvider, FasterWhisperProvi
 from app.transcription.repository import TranscriptRepository, JsonTranscriptRepository
 from app.transcription.service import TranscriptionService
 
+from app.claims.provider import ClaimProvider, EnglishRuleClaimProvider
+from app.claims.repository import ClaimRepository, JsonClaimRepository
+from app.claims.service import ClaimService
+from app.models.claim import ClaimRequest, ClaimRun
+
+
 def create_app(
     settings: Settings | None = None, *,
     storage: VideoStorage | None = None,
@@ -23,13 +29,19 @@ def create_app(
     media: MediaProcessor | None = None,
     transcription_provider: TranscriptionProvider | None = None,
     transcript_repository: TranscriptRepository | None = None,
+    claim_provider: ClaimProvider | None = None,
+    claim_repository: ClaimRepository | None = None,
 ) -> FastAPI:
     config = settings or Settings.from_env()
     video_storage = storage or LocalVideoStorage(config.storage_root)
     video_repository = repository or JsonVideoRepository(config.storage_root)
+    transcripts = transcript_repository or JsonTranscriptRepository(config.storage_root)
+    claims = ClaimService(config, video_repository, transcripts,
+                          claim_repository or JsonClaimRepository(config.storage_root),
+                          claim_provider or EnglishRuleClaimProvider())
     transcription = TranscriptionService(
         config, video_repository, video_storage,
-        transcript_repository or JsonTranscriptRepository(config.storage_root),
+        transcripts,
         transcription_provider or FasterWhisperProvider(config),
     )
     service = VideoService(
@@ -101,6 +113,24 @@ def create_app(
     def latest_transcript(video_id: UUID) -> TranscriptRun:
         """Latest successful run; use /transcriptions for failed/in-progress attempts."""
         return transcription.latest(video_id)
+
+    @app.post('/videos/{video_id}/claim-extractions', response_model=ClaimRun, status_code=201)
+    def extract_claims(video_id: UUID, request: ClaimRequest) -> ClaimRun:
+        """Create an English heuristic candidate run. {} selects the latest successful transcript."""
+        return claims.create(video_id, request)
+
+    @app.get('/videos/{video_id}/claim-extractions', response_model=list[ClaimRun])
+    def list_claim_extractions(video_id: UUID) -> list[ClaimRun]:
+        return claims.list(video_id)
+
+    @app.get('/videos/{video_id}/claim-extractions/{run_id}', response_model=ClaimRun)
+    def get_claim_extraction(video_id: UUID, run_id: UUID) -> ClaimRun:
+        return claims.get(video_id, run_id)
+
+    @app.get('/videos/{video_id}/claims', response_model=ClaimRun)
+    def latest_claims(video_id: UUID) -> ClaimRun:
+        """Latest successful extraction; inspect transcript_run_id for its source version."""
+        return claims.latest(video_id)
 
     return app
 

@@ -62,3 +62,25 @@ hardware. Model files are cached under the existing persistent media volume.
 The future PostgreSQL/job implementation must provide atomic admission and
 idempotency across replicas; current JSON writes and semaphore are process-local.
 See milestone-2.md for the implementation sequence and README for API semantics.
+
+
+## Milestone 3 implementation
+ClaimService depends on video/transcript repositories, ClaimRepository and
+ClaimProvider. EnglishRuleClaimProvider is the initial deterministic baseline;
+there are no model, search or new package dependencies. No truth assessment is
+made. Provider spans are validated and quotes/timestamps are derived from a
+frozen input snapshot. Unicode character offsets refer to canonical joined ASR
+text; timestamps enclose source segments, not individual words.
+
+Each extraction run stores input transcript ID, snapshot/hash, provider/rules
+version, parameters, pipeline version, outcome and latency. Model/prompt versions
+are explicitly null for this rule provider. Local JSON terminal runs are immutable.
+Latest-successful extraction is independent of latest-successful transcription;
+clients inspect the linked transcript ID to detect stale output. Language support
+is explicitly English for this baseline, with empty-silence results allowed.
+
+The candidate detector deliberately preserves compound statements and repeated
+occurrences. Atomic splitting, source search, relationships, verification and
+Evidence Confidence remain separate later modules. A future semantic ClaimProvider
+must preserve the same source-offset contract and enforce its own provider timeouts.
+Read evaluation/claims/README.md for measured baseline recall and limitations.

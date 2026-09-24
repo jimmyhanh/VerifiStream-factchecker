@@ -1,7 +1,7 @@
 name: Backend tests
 on:
   push:
-    branches: [main, milestone-1-video-ingestion, milestone-2-transcription]
+    branches: [main, milestone-1-video-ingestion, milestone-2-transcription, milestone-3-claim-detection]
   pull_request:
   workflow_dispatch:
 permissions:
@@ -27,6 +27,13 @@ jobs:
           ASR_TEST_AUDIO: /tmp/jfk.wav
           HF_HUB_DISABLE_XET: '1'
         run: python -m pytest -q --junitxml=test-results.xml
+      - name: Claim extraction evaluation
+        run: python evaluation/claims/evaluate.py --output /tmp/claim-evaluation.json
+      - name: Save claim evaluation
+        uses: actions/upload-artifact@v4
+        with:
+          name: claim-evaluation
+          path: /tmp/claim-evaluation.json
       - name: HTTP server smoke test
         run: |
           python -m uvicorn app.main:app --app-dir backend --host 127.0.0.1 --port 8000 &
@@ -75,6 +82,23 @@ jobs:
           VIDEO_ID=$(python -c 'import json; print(json.load(open("/tmp/video.json"))["id"])')
           curl --fail --max-time 900 -H 'Content-Type: application/json' -d '{"language":"en"}' "http://localhost:8000/videos/$VIDEO_ID/transcriptions" > /tmp/transcript.json
           python -c 'import json; r=json.load(open("/tmp/transcript.json")); assert r["status"]=="completed", r; assert "country" in r["text"].lower(), r'
+      - name: Claim extraction from real container transcript
+        run: |
+          VIDEO_ID=$(python -c 'import json; print(json.load(open("/tmp/video.json"))["id"])')
+          curl --fail --max-time 30 -H 'Content-Type: application/json' -d '{}' "http://localhost:8000/videos/$VIDEO_ID/claim-extractions" > /tmp/claims.json
+          curl --fail "http://localhost:8000/videos/$VIDEO_ID/claims" > /tmp/latest-claims.json
+          python - <<'PYCODE'
+          import json
+          run = json.load(open('/tmp/claims.json'))
+          transcript = json.load(open('/tmp/transcript.json'))
+          assert run['status'] == 'completed', run
+          assert run['transcript_run_id'] == transcript['id']
+          assert len(run['transcript_sha256']) == 64
+          assert run == json.load(open('/tmp/latest-claims.json'))
+          text = ' '.join(s['text'] for s in run['transcript_snapshot']['segments'])
+          for candidate in run['candidates']:
+              assert candidate['quote'] == text[candidate['char_start']:candidate['char_end']]
+          PYCODE
       - name: Container logs and cleanup
         if: always()
         run: |

@@ -1,0 +1,76 @@
+{
+  "dataset_version": "synthetic-claims-v1",
+  "provider": {
+    "name": "english-rules",
+    "version": "english-rules-v1",
+    "model": null,
+    "prompt_version": null,
+    "parameters": {
+      "splitter": "punctuation-v1",
+      "language": "en",
+      "exclude_forecasts": true,
+      "deduplicate_occurrences": false
+    }
+  },
+  "matching": "Exact half-open canonical transcript character spans; one-to-one set matching",
+  "limitations": "Synthetic, single-author labels; held out from rule tuning, not independently annotated or representative of real videos.",
+  "splits": {
+    "development": {
+      "cases": 12,
+      "true_positives": 12,
+      "false_positives": 1,
+      "false_negatives": 0,
+      "precision": 0.9230769230769231,
+      "recall": 1.0,
+      "f1": 0.96,
+      "errors": [
+        {
+          "case_id": "development-12",
+          "kind": "false_positive",
+          "quote": "My favorite number is 12."
+        }
+      ]
+    },
+    "held_out": {
+      "cases": 12,
+      "true_positives": 9,
+      "false_positives": 1,
+      "false_negatives": 5,
+      "precision": 0.9,
+      "recall": 0.6428571428571429,
+      "f1": 0.75,
+      "errors": [
+        {
+          "case_id": "held_out-02",
+          "kind": "false_negative",
+          "quote": "The hospital treated 300 patients."
+        },
+        {
+          "case_id": "held_out-03",
+          "kind": "false_negative",
+          "quote": "The bridge collapsed in 2019."
+        },
+        {
+          "case_id": "held_out-05",
+          "kind": "false_negative",
+          "quote": "Solar panels contain silicon."
+        },
+        {
+          "case_id": "held_out-07",
+          "kind": "false_negative",
+          "quote": "There were no deaths during the trial."
+        },
+        {
+          "case_id": "held_out-10",
+          "kind": "false_positive",
+          "quote": "The number 7 is lucky."
+        },
+        {
+          "case_id": "held_out-10",
+          "kind": "false_negative",
+          "quote": "Every student received a laptop."
+        }
+      ]
+    }
+  }
+}
