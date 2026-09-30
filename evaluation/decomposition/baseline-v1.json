@@ -1,0 +1,391 @@
+{
+  "dataset_version": "synthetic-atomic-v1",
+  "provider": {
+    "name": "english-atomic-rules",
+    "version": "english-atomic-v1",
+    "model": null,
+    "prompt_version": null,
+    "parameters": {
+      "grammar": "conservative-coordination-v1",
+      "max_clauses": 10,
+      "causal_projection": "positive-policy-quantity-v1",
+      "language": "en"
+    }
+  },
+  "scope": "Synthetic authored regression/evaluation examples, not independently annotated or held out; no general accuracy claim.",
+  "cases": 24,
+  "resolved_cases": 12,
+  "resolution_coverage": 0.5,
+  "expected_resolvable_cases": 15,
+  "exact_resolved_cases": 12,
+  "exact_success_over_resolvable": 0.8,
+  "correct_abstentions": 9,
+  "unsafe_resolutions": 0,
+  "proposition_precision": 1.0,
+  "proposition_recall": 0.7777777777777778,
+  "outcomes": [
+    {
+      "id": "atomic-01",
+      "status": "decomposed",
+      "review_reason": null,
+      "expected_review": false,
+      "exact_match": true,
+      "actual": [
+        {
+          "text": "500,000 jobs were created.",
+          "kind": "observed_outcome"
+        },
+        {
+          "text": "The policy created 500,000 jobs.",
+          "kind": "causal"
+        },
+        {
+          "text": "The policy reduced unemployment by 20%.",
+          "kind": "causal"
+        },
+        {
+          "text": "Unemployment declined by 20%.",
+          "kind": "observed_outcome"
+        }
+      ],
+      "missing": [],
+      "extra": []
+    },
+    {
+      "id": "atomic-02",
+      "status": "decomposed",
+      "review_reason": null,
+      "expected_review": false,
+      "exact_match": true,
+      "actual": [
+        {
+          "text": "The city closed 1 hospital.",
+          "kind": "factual"
+        },
+        {
+          "text": "The city opened 2 schools.",
+          "kind": "factual"
+        }
+      ],
+      "missing": [],
+      "extra": []
+    },
+    {
+      "id": "atomic-03",
+      "status": "decomposed",
+      "review_reason": null,
+      "expected_review": false,
+      "exact_match": true,
+      "actual": [
+        {
+          "text": "The city opened 2 schools.",
+          "kind": "factual"
+        },
+        {
+          "text": "The county closed 1 hospital.",
+          "kind": "factual"
+        }
+      ],
+      "missing": [],
+      "extra": []
+    },
+    {
+      "id": "atomic-04",
+      "status": "decomposed",
+      "review_reason": null,
+      "expected_review": false,
+      "exact_match": true,
+      "actual": [
+        {
+          "text": "At least 500 jobs were created.",
+          "kind": "observed_outcome"
+        },
+        {
+          "text": "The policy created at least 500 jobs.",
+          "kind": "causal"
+        }
+      ],
+      "missing": [],
+      "extra": []
+    },
+    {
+      "id": "atomic-05",
+      "status": "decomposed",
+      "review_reason": null,
+      "expected_review": false,
+      "exact_match": true,
+      "actual": [
+        {
+          "text": "Inflation increased by 2 percentage points.",
+          "kind": "observed_outcome"
+        },
+        {
+          "text": "The policy increased inflation by 2 percentage points.",
+          "kind": "causal"
+        }
+      ],
+      "missing": [],
+      "extra": []
+    },
+    {
+      "id": "atomic-06",
+      "status": "unchanged",
+      "review_reason": null,
+      "expected_review": false,
+      "exact_match": true,
+      "actual": [
+        {
+          "text": "The policy did not create 500 jobs.",
+          "kind": "causal"
+        }
+      ],
+      "missing": [],
+      "extra": []
+    },
+    {
+      "id": "atomic-07",
+      "status": "decomposed",
+      "review_reason": null,
+      "expected_review": false,
+      "exact_match": true,
+      "actual": [
+        {
+          "text": "The mayor said that 500 jobs were created.",
+          "kind": "observed_outcome"
+        },
+        {
+          "text": "The mayor said that the policy created 500 jobs.",
+          "kind": "causal"
+        }
+      ],
+      "missing": [],
+      "extra": []
+    },
+    {
+      "id": "atomic-08",
+      "status": "decomposed",
+      "review_reason": null,
+      "expected_review": false,
+      "exact_match": true,
+      "actual": [
+        {
+          "text": "In 2024, the city closed 1 hospital.",
+          "kind": "factual"
+        },
+        {
+          "text": "In 2024, the city opened 2 schools.",
+          "kind": "factual"
+        }
+      ],
+      "missing": [],
+      "extra": []
+    },
+    {
+      "id": "atomic-09",
+      "status": "unchanged",
+      "review_reason": null,
+      "expected_review": false,
+      "exact_match": true,
+      "actual": [
+        {
+          "text": "Unemployment fell from 5% to 4%.",
+          "kind": "factual"
+        }
+      ],
+      "missing": [],
+      "extra": []
+    },
+    {
+      "id": "atomic-10",
+      "status": "unchanged",
+      "review_reason": null,
+      "expected_review": false,
+      "exact_match": true,
+      "actual": [
+        {
+          "text": "The drug did not cause the rash.",
+          "kind": "causal"
+        }
+      ],
+      "missing": [],
+      "extra": []
+    },
+    {
+      "id": "atomic-11",
+      "status": "unchanged",
+      "review_reason": null,
+      "expected_review": false,
+      "exact_match": true,
+      "actual": [
+        {
+          "text": "The town has at most 10 clinics.",
+          "kind": "factual"
+        }
+      ],
+      "missing": [],
+      "extra": []
+    },
+    {
+      "id": "atomic-12",
+      "status": "unchanged",
+      "review_reason": null,
+      "expected_review": false,
+      "exact_match": true,
+      "actual": [
+        {
+          "text": "It caused the flood.",
+          "kind": "causal"
+        }
+      ],
+      "missing": [],
+      "extra": []
+    },
+    {
+      "id": "atomic-13",
+      "status": "needs_review",
+      "review_reason": "Unrecognized predicate or coordinated noun phrase.",
+      "expected_review": false,
+      "exact_match": false,
+      "actual": [],
+      "missing": [
+        {
+          "text": "The company acquired 3 factories.",
+          "kind": "factual"
+        },
+        {
+          "text": "The company sold 2 warehouses.",
+          "kind": "factual"
+        }
+      ],
+      "extra": []
+    },
+    {
+      "id": "atomic-14",
+      "status": "needs_review",
+      "review_reason": "Policy effect wording is outside the supported quantity projection grammar.",
+      "expected_review": false,
+      "exact_match": false,
+      "actual": [],
+      "missing": [
+        {
+          "text": "The policy reduced unemployment by twenty percent.",
+          "kind": "causal"
+        },
+        {
+          "text": "Unemployment declined by twenty percent.",
+          "kind": "observed_outcome"
+        }
+      ],
+      "extra": []
+    },
+    {
+      "id": "atomic-15",
+      "status": "needs_review",
+      "review_reason": "Unrecognized predicate or coordinated noun phrase.",
+      "expected_review": false,
+      "exact_match": false,
+      "actual": [],
+      "missing": [
+        {
+          "text": "The company doubled production.",
+          "kind": "factual"
+        },
+        {
+          "text": "The company halved costs.",
+          "kind": "factual"
+        }
+      ],
+      "extra": []
+    },
+    {
+      "id": "atomic-16",
+      "status": "needs_review",
+      "review_reason": "Unrecognized predicate or coordinated noun phrase.",
+      "expected_review": true,
+      "exact_match": true,
+      "actual": [],
+      "missing": [],
+      "extra": []
+    },
+    {
+      "id": "atomic-17",
+      "status": "needs_review",
+      "review_reason": "Negation scope across coordination is ambiguous.",
+      "expected_review": true,
+      "exact_match": true,
+      "actual": [],
+      "missing": [],
+      "extra": []
+    },
+    {
+      "id": "atomic-18",
+      "status": "needs_review",
+      "review_reason": "Unsupported scope, modality, attribution, subordination or punctuation.",
+      "expected_review": true,
+      "exact_match": true,
+      "actual": [],
+      "missing": [],
+      "extra": []
+    },
+    {
+      "id": "atomic-19",
+      "status": "needs_review",
+      "review_reason": "Unsupported scope, modality, attribution, subordination or punctuation.",
+      "expected_review": true,
+      "exact_match": true,
+      "actual": [],
+      "missing": [],
+      "extra": []
+    },
+    {
+      "id": "atomic-20",
+      "status": "needs_review",
+      "review_reason": "Unsupported scope, modality, attribution, subordination or punctuation.",
+      "expected_review": true,
+      "exact_match": true,
+      "actual": [],
+      "missing": [],
+      "extra": []
+    },
+    {
+      "id": "atomic-21",
+      "status": "needs_review",
+      "review_reason": "Trailing time or location scope across coordination needs review.",
+      "expected_review": true,
+      "exact_match": true,
+      "actual": [],
+      "missing": [],
+      "extra": []
+    },
+    {
+      "id": "atomic-22",
+      "status": "needs_review",
+      "review_reason": "Unrecognized predicate or coordinated noun phrase.",
+      "expected_review": true,
+      "exact_match": true,
+      "actual": [],
+      "missing": [],
+      "extra": []
+    },
+    {
+      "id": "atomic-23",
+      "status": "needs_review",
+      "review_reason": "Unsupported scope, modality, attribution, subordination or punctuation.",
+      "expected_review": true,
+      "exact_match": true,
+      "actual": [],
+      "missing": [],
+      "extra": []
+    },
+    {
+      "id": "atomic-24",
+      "status": "needs_review",
+      "review_reason": "Unsupported scope, modality, attribution, subordination or punctuation.",
+      "expected_review": true,
+      "exact_match": true,
+      "actual": [],
+      "missing": [],
+      "extra": []
+    }
+  ]
+}

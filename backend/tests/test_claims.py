@@ -280,3 +280,8 @@ def test_complete_video_transcript_claim_workflow(tmp_path):
     assert extraction['transcript_run_id'] == transcription['id']
     assert extraction['candidates'][0]['quote'] == 'The city opened 2 schools.'
     assert client.get(url+'/claims').json() == extraction
+    decomposition = client.post(url+'/decompositions',json={}).json()
+    assert decomposition['status'] == 'completed'
+    assert decomposition['claim_run_id'] == extraction['id']
+    assert decomposition['results'][0]['propositions'][0]['text'] == 'The city opened 2 schools.'
+    assert client.get(url+'/propositions').json() == decomposition

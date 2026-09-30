@@ -10,7 +10,7 @@ history. Work milestone by milestone; acceptance gates determine readiness.
 | Completed | M1: upload/audio; M2: transcription | Merged, tested, exercised locally |
 | Sep 23–25 | Baseline and fixtures | Clean setup, saved demo clips, progress reconciliation |
 | Sep 26–Oct 2 | M3: check-worthy candidates | English heuristic implemented early; versioned source spans, measured precision/recall; semantic quality remains limited |
-| Oct 3–7 | M4: atomic propositions | Preserve qualifiers, split compound/causal assertions, link to source |
+| Oct 3–7 | M4: atomic propositions | Conservative baseline implemented early; preserves source and flags ambiguous grammar for review |
 | Oct 8–15 | M5: evidence retrieval | Source metadata, exact passages/snapshots, failure handling |
 | Oct 16–20 | M6: relationship mapping | Five relationship labels tied to proposition/passage IDs |
 | Oct 21–24 | M7: ranking/independence | Directness/relevance and common-origin grouping |

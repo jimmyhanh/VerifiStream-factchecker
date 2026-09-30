@@ -1,8 +1,8 @@
 # VerifiStream — evidence-based fact checker
 
-Semester project, September–December 2026. **Milestones 1–3:** uploaded video, audio, timestamped transcription and an experimental
-English check-worthy claim detector. Atomic decomposition, retrieval, verification,
-Evidence Confidence and the frontend are not implemented.
+Semester project, September–December 2026. **Milestones 1–4:** uploaded video, audio, timestamped transcription, experimental
+English claim detection and conservative atomic decomposition. Retrieval,
+verification, Evidence Confidence and the frontend are not implemented.
 
 ## Run with Docker (recommended)
 Install Docker with Compose, then run from the repository root:
@@ -138,7 +138,7 @@ uploads. Only the first audio stream is extracted; no language/track selection.
 Dependency ranges are bounded, not a fully locked reproducible environment yet.
 No political-bias scoring and no verification based on model memory.
 
-Next milestone: decompose extracted candidates into atomic propositions.
+Next milestone: multi-source evidence retrieval.
 
 ## Milestone 2: timestamped transcription
 
@@ -332,4 +332,127 @@ held-out precision is **90.0%**, recall **64.3%**, F1 **75.0%** (9 TP, 1 FP,
 examples. These are not general accuracy estimates. See
 [evaluation/claims/README.md](evaluation/claims/README.md) and the raw error report.
 A semantic provider and independently labeled real transcripts remain quality
-improvements. Next planned milestone: M4 atomic decomposition.
+improvements. M4 now adds conservative decomposition; see the following section.
+
+## Milestone 4: atomic propositions
+
+The local English decomposition baseline splits supported compounds and separates
+supported **positive policy quantity** assertions into observed-outcome and causal
+propositions. It uses no new dependencies, API key, model download, or web search.
+It is deliberately conservative: unsupported grammar returns `needs_review`, not
+an invented or silently simplified atomic assertion.
+
+After merging M4, from the repository root:
+
+```powershell
+git pull origin main
+docker compose up --build
+```
+
+Use an existing video with a successful M3 claim extraction. In
+http://localhost:8000/docs:
+
+1. POST `/videos/{video_id}/decompositions` with `{}` to use the latest successful
+   claim extraction. Use the actual **video UUID**, not a transcript or run UUID.
+2. Check run `status`. HTTP 201 creates an attempt; `status: failed` is a failure.
+3. For completed runs, inspect `results`, `unresolved_count`, `proposition_count`.
+   Each parent has `unchanged` (one supported clause), `decomposed` (multiple
+   propositions), or `needs_review` (no atomic assertions, with review_reason).
+   Completed processing does **not** mean all candidates were resolved.
+4. GET `/videos/{video_id}/propositions` reads the latest completed decomposition,
+   including unresolved parents. GET `/videos/{video_id}/decompositions` lists
+   history; GET `/videos/{video_id}/decompositions/{run_id}` reads one attempt.
+
+Optional request to select a particular extraction and subset of its candidates:
+
+```json
+{
+  "claim_run_id": "ACTUAL_CLAIM_EXTRACTION_UUID",
+  "candidate_ids": ["ACTUAL_CANDIDATE_UUID"]
+}
+```
+
+Omit candidate_ids for all candidates (maximum 100 per run); an empty array or
+repeated IDs is invalid. A candidate ID must belong to that selected extraction.
+Source order is retained. A later transcript/extraction does not automatically
+recompute old results: inspect claim_run_id and transcript_run_id.
+
+Example input (illustrative, not a verified statement):
+
+> The policy reduced unemployment by approximately 20% and created 500,000 jobs.
+
+Output assertions:
+- Unemployment declined by approximately 20%. (`observed_outcome`)
+- The policy reduced unemployment by approximately 20%. (`causal`)
+- 500,000 jobs were created. (`observed_outcome`)
+- The policy created 500,000 jobs. (`causal`)
+
+Each causal assertion links to its observed counterpart with
+`related_proposition_ids`. These are source-derived assertions, not evidence that
+the policy worked. M5 and later must retrieve and assess evidence independently.
+
+### Preserving meaning and source lineage
+
+Supported forms include recognized full clauses, shared-subject predicates joined
+with and/but, explicit “The mayor said that …” attribution, and a leading “In
+2024, …” or “In California in 2024, …” scope. Numerical bounds (about, at least,
+at most), percentages vs percentage points, and explicit local negation are kept.
+Negated/hypothetical causation must never imply that the outcome happened.
+
+Ambiguous shared negation, alternatives, coordinated nouns, trailing scope across
+compounds, nested predicates and unsupported wording abstain. The grammar is not
+a general English parser. M3 misses are not recovered. A `needs_review` parent
+must not be sent onward as an accepted atomic proposition without review or a
+new improved decomposition run. `unchanged` means no split, not byte-identical text.
+
+`text` is normalized proposition wording, **not a verbatim quotation**. Exact
+quotations are in `source_parts` with role and canonical-transcript char_start/
+char_end offsets. `source_quote` retains the entire original candidate. Normalized
+text copies source clauses or uses named, versioned policy outcome transformations;
+no quantities, entities or dates are filled in. Attributed source claims retain
+attribution in both wording and metadata; they are not adopted as facts.
+
+Each proposition has its own UUID, parent_candidate_id, kind, transformation,
+source_parts, segment IDs, enclosing ASR timestamps, attribution/context and a
+heuristic needs_context flag. Generic “the policy” remains unresolved context.
+Shared subjects may cause overlapping or broad time ranges; no word alignment is
+claimed. Valid spans do not by themselves prove semantic faithfulness.
+
+Every run preserves the entire claim extraction snapshot and SHA-256, source IDs,
+selected candidate IDs, provider/rules version, pipeline version, parameters,
+processing times and warnings. Model/prompt versions are null for this rule
+provider. Terminal runs are immutable; retries create a new run. Records live in
+`storage/{video_id}/decompositions/{run_id}.json`, inside the existing named Docker
+volume. Keep that volume; do not use `docker compose down -v` to update the app.
+
+### Limits and errors
+
+English only; one run per process; POST waits for completion. Maximum 100 selected
+candidates, 4000 characters per candidate for grammar handling (longer candidates
+need review), 10 clauses and at most 20 propositions per candidate. The existing
+MAX_CLAIM_TRANSCRIPT_CHARS also bounds source input (default 100000). The current
+rules make no external calls; a future remote adapter needs explicit timeouts.
+No durable jobs, restart recovery, pagination or multi-process coordination is added.
+
+- 404: unknown video, extraction, candidate or decomposition; no completed source.
+- 409: source extraction incomplete/failed or source snapshot/quote inconsistent.
+- 422: malformed UUID/body, extra fields, duplicate IDs, or unsupported language.
+- 413: too many candidates or source transcript over the configured limit.
+- 503: busy decomposition capacity or storage error.
+- 201 with failed status: invalid_decomposition_output or decomposition_failed.
+  A failed retry does not hide previous completed results.
+
+### Validation and remaining work
+
+```powershell
+python -m pytest backend/tests -q
+python evaluation/decomposition/evaluate.py
+```
+
+The 24 synthetic evaluation cases are authored regression/development examples,
+not independent/held-out real-video labels. Exact output matched 12/15 clear cases;
+all 9 annotated ambiguous cases abstained. Overall resolution coverage is 12/24,
+and proposition recall is 21/27. See evaluation/decomposition/README.md for full
+metric definitions and errors. General semantic understanding remains limited.
+No verification, Evidence Confidence, bias scoring, retrieval or frontend is added.
+Next milestone: M5 multi-source evidence retrieval with saved passages/provenance.

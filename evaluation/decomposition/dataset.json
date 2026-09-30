@@ -1,0 +1,274 @@
+{
+  "version": "synthetic-atomic-v1",
+  "provenance": "Project-authored synthetic evaluation/regression labels; not held out or independently reviewed.",
+  "policy": "Evaluate exact normalized proposition text and kind; uncertain scope must abstain; labels concern decomposition, not truth.",
+  "cases": [
+    {
+      "id": "atomic-01",
+      "text": "The policy reduced unemployment by 20% and created 500,000 jobs.",
+      "needs_review": false,
+      "expected": [
+        {
+          "text": "Unemployment declined by 20%.",
+          "kind": "observed_outcome"
+        },
+        {
+          "text": "The policy reduced unemployment by 20%.",
+          "kind": "causal"
+        },
+        {
+          "text": "500,000 jobs were created.",
+          "kind": "observed_outcome"
+        },
+        {
+          "text": "The policy created 500,000 jobs.",
+          "kind": "causal"
+        }
+      ]
+    },
+    {
+      "id": "atomic-02",
+      "text": "The city opened 2 schools and closed 1 hospital.",
+      "needs_review": false,
+      "expected": [
+        {
+          "text": "The city opened 2 schools.",
+          "kind": "factual"
+        },
+        {
+          "text": "The city closed 1 hospital.",
+          "kind": "factual"
+        }
+      ]
+    },
+    {
+      "id": "atomic-03",
+      "text": "The city opened 2 schools and the county closed 1 hospital.",
+      "needs_review": false,
+      "expected": [
+        {
+          "text": "The city opened 2 schools.",
+          "kind": "factual"
+        },
+        {
+          "text": "The county closed 1 hospital.",
+          "kind": "factual"
+        }
+      ]
+    },
+    {
+      "id": "atomic-04",
+      "text": "The policy created at least 500 jobs.",
+      "needs_review": false,
+      "expected": [
+        {
+          "text": "At least 500 jobs were created.",
+          "kind": "observed_outcome"
+        },
+        {
+          "text": "The policy created at least 500 jobs.",
+          "kind": "causal"
+        }
+      ]
+    },
+    {
+      "id": "atomic-05",
+      "text": "The policy increased inflation by 2 percentage points.",
+      "needs_review": false,
+      "expected": [
+        {
+          "text": "Inflation increased by 2 percentage points.",
+          "kind": "observed_outcome"
+        },
+        {
+          "text": "The policy increased inflation by 2 percentage points.",
+          "kind": "causal"
+        }
+      ]
+    },
+    {
+      "id": "atomic-06",
+      "text": "The policy did not create 500 jobs.",
+      "needs_review": false,
+      "expected": [
+        {
+          "text": "The policy did not create 500 jobs.",
+          "kind": "causal"
+        }
+      ]
+    },
+    {
+      "id": "atomic-07",
+      "text": "The mayor said that the policy created 500 jobs.",
+      "needs_review": false,
+      "expected": [
+        {
+          "text": "The mayor said that 500 jobs were created.",
+          "kind": "observed_outcome"
+        },
+        {
+          "text": "The mayor said that the policy created 500 jobs.",
+          "kind": "causal"
+        }
+      ]
+    },
+    {
+      "id": "atomic-08",
+      "text": "In 2024, the city opened 2 schools and closed 1 hospital.",
+      "needs_review": false,
+      "expected": [
+        {
+          "text": "In 2024, the city opened 2 schools.",
+          "kind": "factual"
+        },
+        {
+          "text": "In 2024, the city closed 1 hospital.",
+          "kind": "factual"
+        }
+      ]
+    },
+    {
+      "id": "atomic-09",
+      "text": "Unemployment fell from 5% to 4%.",
+      "needs_review": false,
+      "expected": [
+        {
+          "text": "Unemployment fell from 5% to 4%.",
+          "kind": "factual"
+        }
+      ]
+    },
+    {
+      "id": "atomic-10",
+      "text": "The drug did not cause the rash.",
+      "needs_review": false,
+      "expected": [
+        {
+          "text": "The drug did not cause the rash.",
+          "kind": "causal"
+        }
+      ]
+    },
+    {
+      "id": "atomic-11",
+      "text": "The town has at most 10 clinics.",
+      "needs_review": false,
+      "expected": [
+        {
+          "text": "The town has at most 10 clinics.",
+          "kind": "factual"
+        }
+      ]
+    },
+    {
+      "id": "atomic-12",
+      "text": "It caused the flood.",
+      "needs_review": false,
+      "expected": [
+        {
+          "text": "It caused the flood.",
+          "kind": "causal"
+        }
+      ]
+    },
+    {
+      "id": "atomic-13",
+      "text": "The company acquired 3 factories and sold 2 warehouses.",
+      "needs_review": false,
+      "expected": [
+        {
+          "text": "The company acquired 3 factories.",
+          "kind": "factual"
+        },
+        {
+          "text": "The company sold 2 warehouses.",
+          "kind": "factual"
+        }
+      ]
+    },
+    {
+      "id": "atomic-14",
+      "text": "The policy reduced unemployment by twenty percent.",
+      "needs_review": false,
+      "expected": [
+        {
+          "text": "Unemployment declined by twenty percent.",
+          "kind": "observed_outcome"
+        },
+        {
+          "text": "The policy reduced unemployment by twenty percent.",
+          "kind": "causal"
+        }
+      ]
+    },
+    {
+      "id": "atomic-15",
+      "text": "The company doubled production and halved costs.",
+      "needs_review": false,
+      "expected": [
+        {
+          "text": "The company doubled production.",
+          "kind": "factual"
+        },
+        {
+          "text": "The company halved costs.",
+          "kind": "factual"
+        }
+      ]
+    },
+    {
+      "id": "atomic-16",
+      "text": "The city opened schools and hospitals.",
+      "needs_review": true,
+      "expected": []
+    },
+    {
+      "id": "atomic-17",
+      "text": "The policy did not reduce unemployment and create 500 jobs.",
+      "needs_review": true,
+      "expected": []
+    },
+    {
+      "id": "atomic-18",
+      "text": "The policy may have created 500 jobs.",
+      "needs_review": true,
+      "expected": []
+    },
+    {
+      "id": "atomic-19",
+      "text": "If the policy created 500 jobs, unemployment would fall.",
+      "needs_review": true,
+      "expected": []
+    },
+    {
+      "id": "atomic-20",
+      "text": "The city opened 2 schools or 3 hospitals.",
+      "needs_review": true,
+      "expected": []
+    },
+    {
+      "id": "atomic-21",
+      "text": "The city opened 2 schools and closed 1 hospital in 2024.",
+      "needs_review": true,
+      "expected": []
+    },
+    {
+      "id": "atomic-22",
+      "text": "Alice and Bob opened 2 schools.",
+      "needs_review": true,
+      "expected": []
+    },
+    {
+      "id": "atomic-23",
+      "text": "The mayor denied that the policy created 500 jobs.",
+      "needs_review": true,
+      "expected": []
+    },
+    {
+      "id": "atomic-24",
+      "text": "The city opened 2 schools, attracting 100 students.",
+      "needs_review": true,
+      "expected": []
+    }
+  ]
+}
