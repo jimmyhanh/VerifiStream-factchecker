@@ -29,3 +29,21 @@ No evidence retrieval, verdicts, Evidence Confidence, LLM calls or frontend.
 Semantic understanding remains limited by the grammar and M3 candidate recall.
 Unknown entities/dates are never filled in. A future semantic provider still needs
 faithfulness evaluation; source-span validity alone does not prove entailment.
+
+## Completion and validation
+Implemented as draft [PR #4](https://github.com/jimmyhanh/VerifiStream-factchecker/pull/4).
+The latest endpoint returns the latest completed run; inspect per-parent outcomes
+and unresolved_count because completed processing may contain needs_review results.
+
+- Local regression: 125 passed, 1 optional real-ASR skip, 1 warning in 3.17s.
+- CI implementation 319004fbcac4ac804e83284d51272886354cad88:
+  [126 passed, no skips, 1 warning in 5.81s](https://github.com/jimmyhanh/VerifiStream-factchecker/actions/runs/36680185527).
+- Docker upload/transcription/claim/decomposition persistence checks passed.
+  Its speech fixture yields zero candidates; positive policy decomposition is
+  exercised by separate integration tests and a real HTTP synthetic-transcript trial.
+- Authored synthetic regression corpus: 12/15 clear cases matched exactly;
+  all 9 ambiguous cases abstained. Overall resolved coverage: 12/24.
+  Three clear cases remain unsupported. This is not independent accuracy evidence.
+
+README contains setup and endpoint instructions. Review/merge and a user trial
+on real project videos remain outstanding. Next milestone: evidence retrieval.

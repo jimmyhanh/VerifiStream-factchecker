@@ -132,7 +132,7 @@ Draft PR: https://github.com/jimmyhanh/VerifiStream-factchecker/pull/3
 - [x] Real Uvicorn HTTP M3/M4 four-proposition policy trial passed (synthetic transcript).
 - [x] Synthetic evaluation dataset and reproducible per-case outcome report.
 - [x] README, architecture, progress, roadmap and CI updated.
-- [ ] Observe M4 GitHub CI and container checks.
+- [x] Observe M4 GitHub CI: 126 tests passed; container checks succeeded.
 - [ ] User review/merge and local decomposition trial.
 
 Evaluation: 24 authored synthetic regression cases; 12 resolved, 12/15 clear cases
@@ -142,3 +142,18 @@ The corpus exposed a negated-causation kind bug that was fixed, so it is explici
 not held out. Acquired/sold, doubled/halved and written
 “twenty percent” forms abstain with an explicit review reason.
 No evidence has been retrieved or checked. Next: M5 evidence retrieval.
+
+### Observed M4 CI validation
+Tested implementation: 319004fbcac4ac804e83284d51272886354cad88.
+[CI run 36680185527](https://github.com/jimmyhanh/VerifiStream-factchecker/actions/runs/36680185527):
+126 passed, 0 failed, 0 skipped, 1 upstream test-client warning in 5.81 seconds.
+Both test and container jobs succeeded. Tests include real speech inference and
+FFmpeg regression. Docker uploaded and transcribed the speech fixture, extracted
+claims, created a completed decomposition, and retrieved the same persisted result.
+The JFK exhortation fixture produced zero candidates/propositions; the positive
+four-proposition path is covered separately by integration tests and the local
+HTTP trial on a synthetic saved transcript. The evaluation artifact was uploaded.
+Upstream GitHub Action deprecation notices remain non-blocking. This documentation
+update records the tested implementation without changing executable code.
+
+Draft PR: https://github.com/jimmyhanh/VerifiStream-factchecker/pull/4
