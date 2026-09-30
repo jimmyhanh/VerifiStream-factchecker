@@ -84,3 +84,27 @@ occurrences. Atomic splitting, source search, relationships, verification and
 Evidence Confidence remain separate later modules. A future semantic ClaimProvider
 must preserve the same source-offset contract and enforce its own provider timeouts.
 Read evaluation/claims/README.md for measured baseline recall and limitations.
+
+
+## Milestone 4 implementation
+DecompositionService consumes an immutable successful ClaimRun via ClaimRepository,
+a replaceable DecompositionProvider, and DecompositionRepository. The English rule
+provider returns span-based ClausePlans; the service derives normalized text with
+explicit versioned transformations, source parts and timing. Every parent has a
+result: unchanged, decomposed, or needs_review. Unresolved parents produce no
+accepted atomic propositions. Processing completed is not a semantic success label.
+
+A small grammar handles coordination, explicit attribution/leading-year scope and
+positive policy numerical effects. Occurrence is never derived from negative/modal
+causation. Predicate projection separates observed outcomes from causal assertions;
+linked proposition IDs record that relationship. Compound ambiguity abstains.
+Source references, lexical coverage, transformation prerequisites and source hashes
+are checked; syntactic checks are not an entailment proof. No LLM is used.
+
+Atomic IDs, parent candidate IDs, extraction/transcript IDs and frozen snapshots
+preserve the lineage. JsonDecompositionRepository follows existing terminal-run
+immutability and atomic write patterns. Max 100 candidates/run and one process-local
+admission slot constrain processing. Source snapshots are included in history;
+production pagination, durable jobs and database transactions remain deferred.
+M5 must consume actual resolved proposition records and explicitly handle missing
+context; it must not treat needs_review parents as completed atomic facts.

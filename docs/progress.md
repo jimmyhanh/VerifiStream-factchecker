@@ -38,7 +38,7 @@ See README and architecture for deployment prerequisites.
 
 ## Next
 M1–M2 merged and exercised locally. M3 English heuristic baseline implemented;
-validation details below. M4 not started.
+validation details below. M4 conservative baseline implemented; see below.
 
 ## Milestone 2
 - [x] Inspect merged main (398b041) and document implementation plan.
@@ -85,7 +85,8 @@ Next: M3 baseline (see below), followed by M4 atomic propositions.
 - [x] Real Uvicorn HTTP health/create/retrieve smoke trial on a synthetic saved transcript.
 - [x] README, architecture, environment/Compose and CI updated.
 - [x] CI: 74 tests passed with real ASR; Docker upload/transcription/claim routes passed.
-- [ ] User review/merge and local claim extraction trial.
+- [x] PR #3 merged into main as 71de992.
+- [ ] User local claim extraction trial not independently confirmed.
 
 The local skip is the opt-in real speech-model regression test; the new extraction
 provider itself is real and deterministic, not mocked. Real FFmpeg ingestion plus
@@ -115,3 +116,44 @@ Evaluation artifact was uploaded by CI. Upstream GitHub Action Node deprecation
 notices remain non-blocking. This final update only records validation in docs.
 
 Draft PR: https://github.com/jimmyhanh/VerifiStream-factchecker/pull/3
+
+
+## Milestone 4 — September 30, 2026 UTC
+- [x] Inspect merged main 71de992 and write docs/milestone-4.md before code.
+- [x] Replaceable English decomposition provider, schemas and repository.
+- [x] Supported coordination plus explicit attribution/year context preserved.
+- [x] Positive policy quantity assertions split into outcome and causal propositions.
+- [x] Ambiguous or unsupported grammar abstains with per-parent needs_review.
+- [x] Exact source parts, parent IDs, related IDs, transcript timing and snapshot hashes.
+- [x] Immutable create/list/specific/latest-completed runs, optional candidate selection.
+- [x] Bounded input/output, lineage validation, busy/error handling and safe logs.
+- [x] Local regression: 125 passed, 1 optional real-ASR skip, 1 upstream warning (3.17s).
+- [x] Real FFmpeg + injected transcription + M3/M4 end-to-end test passed.
+- [x] Real Uvicorn HTTP M3/M4 four-proposition policy trial passed (synthetic transcript).
+- [x] Synthetic evaluation dataset and reproducible per-case outcome report.
+- [x] README, architecture, progress, roadmap and CI updated.
+- [x] Observe M4 GitHub CI: 126 tests passed; container checks succeeded.
+- [ ] User review/merge and local decomposition trial.
+
+Evaluation: 24 authored synthetic regression cases; 12 resolved, 12/15 clear cases
+exactly matched, all 9 annotated ambiguous cases abstained. Proposition precision
+21/21 and recall 21/27 on this small set are not general accuracy estimates.
+The corpus exposed a negated-causation kind bug that was fixed, so it is explicitly
+not held out. Acquired/sold, doubled/halved and written
+“twenty percent” forms abstain with an explicit review reason.
+No evidence has been retrieved or checked. Next: M5 evidence retrieval.
+
+### Observed M4 CI validation
+Tested implementation: 319004fbcac4ac804e83284d51272886354cad88.
+[CI run 36680185527](https://github.com/jimmyhanh/VerifiStream-factchecker/actions/runs/36680185527):
+126 passed, 0 failed, 0 skipped, 1 upstream test-client warning in 5.81 seconds.
+Both test and container jobs succeeded. Tests include real speech inference and
+FFmpeg regression. Docker uploaded and transcribed the speech fixture, extracted
+claims, created a completed decomposition, and retrieved the same persisted result.
+The JFK exhortation fixture produced zero candidates/propositions; the positive
+four-proposition path is covered separately by integration tests and the local
+HTTP trial on a synthetic saved transcript. The evaluation artifact was uploaded.
+Upstream GitHub Action deprecation notices remain non-blocking. This documentation
+update records the tested implementation without changing executable code.
+
+Draft PR: https://github.com/jimmyhanh/VerifiStream-factchecker/pull/4

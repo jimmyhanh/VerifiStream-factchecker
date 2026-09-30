@@ -1,7 +1,7 @@
 name: Backend tests
 on:
   push:
-    branches: [main, milestone-1-video-ingestion, milestone-2-transcription, milestone-3-claim-detection]
+    branches: [main, milestone-1-video-ingestion, milestone-2-transcription, milestone-3-claim-detection, milestone-4-atomic-propositions]
   pull_request:
   workflow_dispatch:
 permissions:
@@ -34,6 +34,13 @@ jobs:
         with:
           name: claim-evaluation
           path: /tmp/claim-evaluation.json
+      - name: Atomic decomposition evaluation
+        run: python evaluation/decomposition/evaluate.py --output /tmp/atomic-evaluation.json
+      - name: Save decomposition evaluation
+        uses: actions/upload-artifact@v4
+        with:
+          name: atomic-evaluation
+          path: /tmp/atomic-evaluation.json
       - name: HTTP server smoke test
         run: |
           python -m uvicorn app.main:app --app-dir backend --host 127.0.0.1 --port 8000 &
@@ -98,6 +105,22 @@ jobs:
           text = ' '.join(s['text'] for s in run['transcript_snapshot']['segments'])
           for candidate in run['candidates']:
               assert candidate['quote'] == text[candidate['char_start']:candidate['char_end']]
+          PYCODE
+      - name: Decomposition from container claim run
+        run: |
+          VIDEO_ID=$(python -c 'import json; print(json.load(open("/tmp/video.json"))["id"])')
+          curl --fail --max-time 30 -H 'Content-Type: application/json' -d '{}' "http://localhost:8000/videos/$VIDEO_ID/decompositions" > /tmp/atoms.json
+          curl --fail "http://localhost:8000/videos/$VIDEO_ID/propositions" > /tmp/latest-atoms.json
+          python - <<'PYCODE'
+          import json
+          run = json.load(open('/tmp/atoms.json'))
+          claims = json.load(open('/tmp/claims.json'))
+          assert run['status'] == 'completed', run
+          assert run['claim_run_id'] == claims['id']
+          assert run['transcript_run_id'] == claims['transcript_run_id']
+          assert len(run['claim_snapshot_sha256']) == 64
+          assert len(run['results']) == len(claims['candidates'])
+          assert run == json.load(open('/tmp/latest-atoms.json'))
           PYCODE
       - name: Container logs and cleanup
         if: always()

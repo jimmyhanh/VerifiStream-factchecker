@@ -20,6 +20,10 @@ from app.claims.provider import ClaimProvider, EnglishRuleClaimProvider
 from app.claims.repository import ClaimRepository, JsonClaimRepository
 from app.claims.service import ClaimService
 from app.models.claim import ClaimRequest, ClaimRun
+from app.decomposition.provider import DecompositionProvider, EnglishRuleDecompositionProvider
+from app.decomposition.repository import DecompositionRepository, JsonDecompositionRepository
+from app.decomposition.service import DecompositionService
+from app.models.proposition import DecompositionRequest, DecompositionRun
 
 
 def create_app(
@@ -31,13 +35,19 @@ def create_app(
     transcript_repository: TranscriptRepository | None = None,
     claim_provider: ClaimProvider | None = None,
     claim_repository: ClaimRepository | None = None,
+    decomposition_provider: DecompositionProvider | None = None,
+    decomposition_repository: DecompositionRepository | None = None,
 ) -> FastAPI:
     config = settings or Settings.from_env()
     video_storage = storage or LocalVideoStorage(config.storage_root)
     video_repository = repository or JsonVideoRepository(config.storage_root)
     transcripts = transcript_repository or JsonTranscriptRepository(config.storage_root)
+    claim_records = claim_repository or JsonClaimRepository(config.storage_root)
+    decomposition = DecompositionService(config, video_repository, claim_records,
+        decomposition_repository or JsonDecompositionRepository(config.storage_root),
+        decomposition_provider or EnglishRuleDecompositionProvider())
     claims = ClaimService(config, video_repository, transcripts,
-                          claim_repository or JsonClaimRepository(config.storage_root),
+                          claim_records,
                           claim_provider or EnglishRuleClaimProvider())
     transcription = TranscriptionService(
         config, video_repository, video_storage,
@@ -131,6 +141,24 @@ def create_app(
     def latest_claims(video_id: UUID) -> ClaimRun:
         """Latest successful extraction; inspect transcript_run_id for its source version."""
         return claims.latest(video_id)
+
+    @app.post('/videos/{video_id}/decompositions', response_model=DecompositionRun, status_code=201)
+    def decompose_claims(video_id: UUID, request: DecompositionRequest) -> DecompositionRun:
+        """{} selects latest successful claims. Inspect per-parent status and unresolved_count."""
+        return decomposition.create(video_id, request)
+
+    @app.get('/videos/{video_id}/decompositions', response_model=list[DecompositionRun])
+    def list_decompositions(video_id: UUID) -> list[DecompositionRun]:
+        return decomposition.list(video_id)
+
+    @app.get('/videos/{video_id}/decompositions/{run_id}', response_model=DecompositionRun)
+    def get_decomposition(video_id: UUID, run_id: UUID) -> DecompositionRun:
+        return decomposition.get(video_id, run_id)
+
+    @app.get('/videos/{video_id}/propositions', response_model=DecompositionRun)
+    def latest_propositions(video_id: UUID) -> DecompositionRun:
+        """Latest completed decomposition, including parents that need review."""
+        return decomposition.latest(video_id)
 
     return app
 
