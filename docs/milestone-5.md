@@ -32,3 +32,21 @@ provider access and source-content permissions are separate. No subscription is
 purchased by this milestone. References checked October 7, 2026:
 https://brave.com/search/api/
 https://api-dashboard.search.brave.com/app/documentation/web-search/responses
+
+## Implementation and observed validation
+
+Draft PR #5 implements the planned adapters, typed records and retrieval APIs.
+The public fetcher also accepts gzip with compressed and decompressed byte caps,
+after a real source ignored the requested identity encoding. Unsupported source
+classification and independence remain unknown rather than guessed.
+
+Tested revision: 1d8489679f2c36b95adce0827bbf2bbce749e6ac.
+CI run 37678381878: 164 passed, no skips, one warning in 7.84 seconds. Container
+checks succeeded. Local: 163 passed, one optional real-ASR skip, one warning.
+The separate live fetch trial successfully retrieved both Python-owned sources
+and selected three exact-offset passages from each. This is a fetching trial,
+not evidence of independence, factual verification or automatic search quality.
+The six-case lexical regression retains two false positives and one false negative.
+
+Remaining acceptance: credentialed Brave trial, user review/merge and a real
+project-video retrieval trial. No search subscription or credential was created.
