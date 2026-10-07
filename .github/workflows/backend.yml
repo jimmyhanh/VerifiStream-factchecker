@@ -50,7 +50,9 @@ jobs:
           path: /tmp/retrieval-evaluation.json
       - name: Public source fetch trial without paid search
         continue-on-error: true
-        run: python evaluation/retrieval/live_smoke.py > /tmp/retrieval-live.json
+        run: |
+          set -o pipefail
+          python evaluation/retrieval/live_smoke.py | tee /tmp/retrieval-live.json
       - name: Save public source trial
         if: always()
         uses: actions/upload-artifact@v4

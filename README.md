@@ -522,7 +522,8 @@ or establish source independence. M7 will address common-origin grouping.
 ### Retrieval bounds and limitations
 
 Only public HTTPS port 443, UTF-8 HTML/XHTML/plain text; no JS rendering, PDFs,
-compressed responses, logins or paywall bypass. Redirects are revalidated; public
+Brotli/deflate responses, logins or paywall bypass. Gzip is supported with separate
+compressed and decompressed byte caps. Redirects are revalidated; public
 DNS addresses are pinned for the connection while TLS verifies the original host.
 No environment proxy is used. A network requiring a proxy may fail explicitly.
 Source bodies are limited to 2 MB, extracted text to 200,000 characters, and each

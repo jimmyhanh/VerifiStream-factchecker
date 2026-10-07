@@ -1,6 +1,6 @@
 """Public HTTPS only. Pin validated DNS addresses; retain hostname for TLS/SNI.
 
-No environment proxies, cookies, JS, decompression or authenticated page access.
+No environment proxies, cookies, JS or authenticated page access. Gzip is bounded.
 Socket operations have timeouts and reads check elapsed time. OS DNS resolution
 itself has no portable hard deadline; a durable worker deadline is future work.
 """
@@ -11,6 +11,7 @@ import ipaddress
 import socket
 import ssl
 import time
+import zlib
 from typing import Protocol
 from urllib.parse import urlsplit, urlunsplit, urljoin
 
@@ -119,7 +120,8 @@ class PublicHTTPSFetcher:
                 content_type = response.getheader('Content-Type', '').split(';')[0].strip().lower()
                 if content_type not in allowed_types:
                     raise RetrievalError('unsupported_content_type')
-                if response.getheader('Content-Encoding', 'identity').lower() not in ('identity', ''):
+                encoding = response.getheader('Content-Encoding', 'identity').lower()
+                if encoding not in ('identity', '', 'gzip'):
                     raise RetrievalError('unsupported_content_encoding')
                 length = response.getheader('Content-Length')
                 if length and int(length) > self.max_bytes:
@@ -139,7 +141,18 @@ class PublicHTTPSFetcher:
                     if total > self.max_bytes:
                         raise RetrievalError('source_too_large')
                 body = b''.join(chunks)
-                return FetchedPage(current, content_type, body, hashlib.sha256(body).hexdigest())
+                raw_hash = hashlib.sha256(body).hexdigest()
+                if encoding == 'gzip':
+                    decoder = zlib.decompressobj(16 + zlib.MAX_WBITS)
+                    try:
+                        body = decoder.decompress(body, self.max_bytes + 1)
+                    except zlib.error:
+                        raise RetrievalError('invalid_gzip') from None
+                    if len(body) > self.max_bytes or decoder.unconsumed_tail:
+                        raise RetrievalError('source_too_large')
+                    if not decoder.eof or decoder.unused_data:
+                        raise RetrievalError('invalid_gzip')
+                return FetchedPage(current, content_type, body, raw_hash)
             except (TimeoutError, socket.timeout):
                 raise RetrievalError('fetch_timeout') from None
             except (OSError, http.client.HTTPException, ValueError):

@@ -223,7 +223,7 @@ def test_redirect_revalidated_and_credentials_not_forwarded(monkeypatch):
 @pytest.mark.parametrize('response,code',[
     (Response(body=b'123456'),'source_too_large'),
     (Response(headers={'Content-Type':'application/pdf'}),'unsupported_content_type'),
-    (Response(headers={'Content-Type':'text/plain','Content-Encoding':'gzip'}),'unsupported_content_encoding'),
+    (Response(headers={'Content-Type':'text/plain','Content-Encoding':'br'}),'unsupported_content_encoding'),
     (Response(403),'http_403')])
 def test_fetch_failures(monkeypatch,response,code):
     transport(monkeypatch,[response])
@@ -304,3 +304,21 @@ def test_invalid_passage_adapter_is_rejected(setup):
     run=client.post(base+'/retrievals',json=body(setup)).json()
     assert not run['results'][0]['passages']
     assert run['results'][0]['attempts'][-1]['error_code']=='invalid_passage'
+
+
+def test_bounded_gzip_response(monkeypatch):
+    import gzip
+    body=gzip.compress(b'London schools')
+    transport(monkeypatch,[Response(headers={'Content-Type':'text/plain','Content-Encoding':'gzip'},body=body)])
+    result=PublicHTTPSFetcher().fetch('https://example.org/')
+    assert result.body==b'London schools' and result.raw_sha256==hashlib.sha256(body).hexdigest()
+    body=gzip.compress(b'a'*10000)
+    transport(monkeypatch,[Response(headers={'Content-Type':'text/plain','Content-Encoding':'gzip'},body=body)])
+    with pytest.raises(RetrievalError,match='source_too_large'):
+        PublicHTTPSFetcher(max_bytes=100).fetch('https://example.org/')
+
+
+def test_invalid_gzip_response(monkeypatch):
+    transport(monkeypatch,[Response(headers={'Content-Type':'text/plain','Content-Encoding':'gzip'},body=b'bad')])
+    with pytest.raises(RetrievalError,match='invalid_gzip'):
+        PublicHTTPSFetcher().fetch('https://example.org/')
