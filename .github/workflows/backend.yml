@@ -1,7 +1,7 @@
 name: Backend tests
 on:
   push:
-    branches: [main, milestone-1-video-ingestion, milestone-2-transcription, milestone-3-claim-detection, milestone-4-atomic-propositions]
+    branches: [main, milestone-1-video-ingestion, milestone-2-transcription, milestone-3-claim-detection, milestone-4-atomic-propositions, milestone-5-evidence-retrieval]
   pull_request:
   workflow_dispatch:
 permissions:
@@ -41,6 +41,22 @@ jobs:
         with:
           name: atomic-evaluation
           path: /tmp/atomic-evaluation.json
+      - name: Retrieval passage evaluation
+        run: python evaluation/retrieval/evaluate.py > /tmp/retrieval-evaluation.json
+      - name: Save retrieval evaluation
+        uses: actions/upload-artifact@v4
+        with:
+          name: retrieval-evaluation
+          path: /tmp/retrieval-evaluation.json
+      - name: Public source fetch trial without paid search
+        continue-on-error: true
+        run: python evaluation/retrieval/live_smoke.py > /tmp/retrieval-live.json
+      - name: Save public source trial
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: retrieval-live-trial
+          path: /tmp/retrieval-live.json
       - name: HTTP server smoke test
         run: |
           python -m uvicorn app.main:app --app-dir backend --host 127.0.0.1 --port 8000 &

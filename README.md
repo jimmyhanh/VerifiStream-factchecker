@@ -456,3 +456,92 @@ and proposition recall is 21/27. See evaluation/decomposition/README.md for full
 metric definitions and errors. General semantic understanding remains limited.
 No verification, Evidence Confidence, bias scoring, retrieval or frontend is added.
 Next milestone: M5 multi-source evidence retrieval with saved passages/provenance.
+
+## Milestone 5 evidence retrieval
+
+M5 retrieves candidate passages, **not verdicts**. Start with a completed M4 run.
+Copy actual proposition IDs from `results[].propositions[].id` (not candidate or
+video IDs). POST `/videos/{video_id}/retrievals` with:
+
+```json
+{
+  "proposition_ids": ["YOUR_PROPOSITION_UUID"],
+  "decomposition_run_id": "YOUR_DECOMPOSITION_RUN_UUID",
+  "mode": "search"
+}
+```
+
+The UUID placeholders must be replaced. Omit `decomposition_run_id` to select the
+latest completed decomposition. Up to three propositions can be selected per run.
+Search uses Brave Web Search; obtain a key and set `BRAVE_SEARCH_API_KEY` in the
+untracked `.env` beside Compose, then `docker compose up --build`. No new Python
+packages are required. The key never enters run records or source requests.
+Check the provider's current plan and storage rights for your intended usage:
+https://brave.com/search/api/ . Source-site content permissions are separate.
+Missing configuration yields `search_not_configured` in a saved failed run;
+HTTP 201 only means that the run was created.
+
+For a no-key trial, explicitly provide HTTPS sources:
+
+```json
+{
+  "proposition_ids": ["YOUR_PROPOSITION_UUID"],
+  "mode": "manual_urls",
+  "source_urls": {
+    "YOUR_PROPOSITION_UUID": ["https://docs.python.org/3/faq/general.html"]
+  }
+}
+```
+
+Choose URLs relevant to your actual proposition; this example is useful for a
+Python-history claim only. Manual mode records `manual-urls-v1`, not automated
+search. It accepts up to five URLs per proposition. For a proposition flagged
+`needs_context`, add a `contexts` mapping such as
+`{"YOUR_PROPOSITION_UUID": "Specific policy name, country and calendar years"}`.
+This is separately recorded unverified user context, not a rewrite or factual
+confirmation of the source claim. Without it, that result is `needs_context` and
+no search occurs. Context detection is heuristic; inspect all selected assertions.
+
+- GET `/videos/{video_id}/retrievals` lists saved runs.
+- GET `/videos/{video_id}/retrievals/{run_id}` reads an exact historical run.
+- `sources` contains canonical extracted text, hashes, final URL and page-declared
+  metadata. Dates/publisher can be absent; metadata is unverified. Primary/secondary
+  classification, source type and independence remain `unknown` in this baseline.
+- `results[].passages` contains exact substrings and character offsets into saved
+  text, plus lexical token overlap scores. These scores are not Evidence Confidence.
+- `hits` retains discovery metadata separately; snippets are never promoted into
+  passages if a page cannot be fetched. `attempts` records failures and duplicates.
+- Result states: `retrieved`, `no_passages`, `needs_context`, `partial`, `failed`.
+  Run `completed` means orchestration finished, not that sufficient evidence exists.
+  All-failed requests save a failed run. Retries preserve terminal histories.
+
+Identical text snapshots link with `duplicate_of_source_id`; duplicate canonical
+URLs share a fetched snapshot within a run. This does not detect syndicated stories
+or establish source independence. M7 will address common-origin grouping.
+
+### Retrieval bounds and limitations
+
+Only public HTTPS port 443, UTF-8 HTML/XHTML/plain text; no JS rendering, PDFs,
+compressed responses, logins or paywall bypass. Redirects are revalidated; public
+DNS addresses are pinned for the connection while TLS verifies the original host.
+No environment proxy is used. A network requiring a proxy may fail explicitly.
+Source bodies are limited to 2 MB, extracted text to 200,000 characters, and each
+source contributes at most three 1,000-character windows. HTML extraction omits
+script/style/template content but may retain navigation and boilerplate.
+
+Socket timeout / elapsed read budget is 10 seconds per fetch and up to three
+redirects. A 90-second run budget stops admission of further network operations;
+it is not a hard worker deadline. OS DNS and slow header parsing can exceed that
+budget. Only one retrieval runs per API process. Histories are unpaginated and
+store full bounded text snapshots locally, so disk use grows. Durable jobs,
+retention, network isolation and public deployment hardening remain future work.
+
+Run deterministic tests with `python -m pytest backend/tests -q` and the six-case
+synthetic passage evaluation with `python evaluation/retrieval/evaluate.py`.
+The evaluation is a development regression, not live search/semantic accuracy.
+An optional no-key network trial is `python evaluation/retrieval/live_smoke.py`;
+both URLs belong to the Python organization and do not demonstrate independent
+corroboration. CI runs this trial separately with a saved artifact; external site
+failure is non-blocking and must be inspected separately from the test job status.
+Brave's request/response contract is tested with fixtures; a real credentialed
+search trial remains required before claiming complete live-search validation.
