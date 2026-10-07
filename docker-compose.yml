@@ -6,6 +6,7 @@ services:
     ports:
       - "127.0.0.1:8000:8000"
     environment:
+      BRAVE_SEARCH_API_KEY: ${BRAVE_SEARCH_API_KEY:-}
       MAX_CLAIM_TRANSCRIPT_CHARS: ${MAX_CLAIM_TRANSCRIPT_CHARS:-100000}
       STORAGE_ROOT: /srv/storage
       MODEL_CACHE: /srv/storage/models

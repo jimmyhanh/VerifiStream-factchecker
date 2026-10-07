@@ -36,3 +36,10 @@ history. Work milestone by milestone; acceptance gates determine readiness.
 - No live processing, Kubernetes, Kafka, or premature microservices for this demo.
 - Continue collecting evaluation fixtures at each milestone; M3's synthetic labels
   need independently reviewed real transcript examples before broad quality claims.
+
+### October 7 update
+M4 is merged (3db6107). M5 retrieval implementation is in progress for the Oct 8–15
+window. Its search adapter and manual-source workflow preserve exact source text;
+provider credentials and live search acceptance remain separate gates. The Nov 13
+core demo target is unchanged. M6–M10 follow the accelerated schedule, while M11
+and M12 stay deferred unless minimal job reliability is required.
