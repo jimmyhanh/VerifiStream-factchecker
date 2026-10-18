@@ -40,3 +40,7 @@ requires an operator key. Fixture tests do not measure model accuracy.
 195 tests passed, one optional real-ASR skip and one upstream Starlette warning.
 Real Uvicorn `/health` returned HTTP 200 and OpenAPI includes mapping routes.
 Live credentialed semantic evaluation is pending; no accuracy claim is made.
+
+CI run 39176012000 passed 196 tests in 9.19s on implementation 81dfc4d;
+Docker build and existing media/transcription pipeline checks also passed.
+Draft review: https://github.com/jimmyhanh/VerifiStream-factchecker/pull/6

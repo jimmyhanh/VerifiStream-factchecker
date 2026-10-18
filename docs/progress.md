@@ -214,10 +214,21 @@ requires an operator key in the untracked .env; do not send secrets in chat.
 - [x] POST/list/get mapping API; bounded selections, concurrency and partial failures.
 - [x] Authored semantic evaluation cases and opt-in live evaluation runner.
 - [x] Local regression tests: 195 passed, 1 optional real-ASR skip, 1 upstream warning.
-- [ ] Observe CI and container checks for the published M6 branch.
+- [x] Observe CI and container checks for the published M6 branch.
 - [ ] Credentialed live model trial and human review of semantic outputs.
 - [ ] M5 credentialed Brave trial, dependency-order review/merge and user local trial.
 
 No key was supplied or external model invoked during implementation. Contract tests
 use deterministic fixtures and do not establish semantic accuracy or injection
 resistance. M6 adds no aggregate verdict, Evidence Confidence or source independence.
+
+### M6 CI validation and review
+Implementation `81dfc4d02661fc988ea638bfb480bf738a8060b5` passed
+[CI run 39176012000](https://github.com/jimmyhanh/VerifiStream-factchecker/actions/runs/39176012000):
+**196 tests passed in 9.19 seconds**, no failures or skips. Docker build, upload,
+real speech transcription, claim extraction and decomposition checks passed. M6 API
+and persistence are exercised by the automated suite; no live LLM was called.
+
+[Draft PR #6](https://github.com/jimmyhanh/VerifiStream-factchecker/pull/6) is stacked
+on PR #5. Both remain unmerged. The following documentation commit only records
+validation; the implementation tested by CI is the SHA above.
