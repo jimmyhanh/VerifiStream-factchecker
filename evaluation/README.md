@@ -20,3 +20,6 @@ examples, not independently annotated real-video performance.
 M5 passage fixtures and an optional public-fetch trial are under `retrieval/`.
 Reported lexical results are not evidence-relationship, verdict or live-search
 accuracy. See that directory's README for denominators and raw errors.
+
+M6: `mapping/` contains 12 authored semantic smoke cases and an explicit opt-in live
+runner. Backend mapping tests validate contracts/provenance, not model accuracy.

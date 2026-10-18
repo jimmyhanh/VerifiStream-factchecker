@@ -202,3 +202,22 @@ not inferred from the non-blocking job's green status.
 Draft PR: https://github.com/jimmyhanh/VerifiStream-factchecker/pull/5
 Implementation and automated validation are ready for review. Real Brave discovery
 requires an operator key in the untracked .env; do not send secrets in chat.
+
+## Milestone 6 — 2026-10-18
+
+- [x] Inspect repository; branch from unmerged M5 without merging PR #5.
+- [x] Document implementation plan and semantic boundaries.
+- [x] Strict relationship/abstention schemas and replaceable provider interface.
+- [x] Optional OpenAI structured-output adapter, explicit model/key configuration.
+- [x] Revalidate input lineage and exact citation offsets; reject fabricated quotes.
+- [x] Preserve prompts, model IDs, usage, snapshots and immutable mapping history.
+- [x] POST/list/get mapping API; bounded selections, concurrency and partial failures.
+- [x] Authored semantic evaluation cases and opt-in live evaluation runner.
+- [x] Local regression tests: 195 passed, 1 optional real-ASR skip, 1 upstream warning.
+- [ ] Observe CI and container checks for the published M6 branch.
+- [ ] Credentialed live model trial and human review of semantic outputs.
+- [ ] M5 credentialed Brave trial, dependency-order review/merge and user local trial.
+
+No key was supplied or external model invoked during implementation. Contract tests
+use deterministic fixtures and do not establish semantic accuracy or injection
+resistance. M6 adds no aggregate verdict, Evidence Confidence or source independence.
