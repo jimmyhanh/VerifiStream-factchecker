@@ -6,6 +6,8 @@ services:
     ports:
       - "127.0.0.1:8000:8000"
     environment:
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+      MAPPING_MODEL: ${MAPPING_MODEL:-}
       BRAVE_SEARCH_API_KEY: ${BRAVE_SEARCH_API_KEY:-}
       MAX_CLAIM_TRANSCRIPT_CHARS: ${MAX_CLAIM_TRANSCRIPT_CHARS:-100000}
       STORAGE_ROOT: /srv/storage

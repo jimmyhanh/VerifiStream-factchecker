@@ -546,3 +546,77 @@ corroboration. CI runs this trial separately with a saved artifact; external sit
 failure is non-blocking and must be inspected separately from the test job status.
 Brave's request/response contract is tested with fixtures; a real credentialed
 search trial remains required before claiming complete live-search validation.
+
+## Milestone 6: evidence relationships
+
+M6 builds on M5. While their PRs are open, the `milestone-6-evidence-mapping` branch
+includes both. This stage interprets saved passages against individual propositions;
+it does not compute final verdicts, Evidence Confidence or source independence.
+
+Add these to your existing root `.env` (keep your Brave settings):
+
+```dotenv
+OPENAI_API_KEY=your_private_openai_api_key
+MAPPING_MODEL=your_available_structured_output_model_id
+```
+
+Choose an available OpenAI model supporting Chat Completions with `json_schema`
+structured outputs; use a dated model snapshot for reproducibility. The model is
+explicitly configured, with no hidden fallback. See the [provider documentation](https://developers.openai.com/api/docs/guides/structured-outputs?api-mode=chat).
+Brave searches the web; this separate API analyzes claim/passage relationships.
+Mapping sends selected claim text, source quotes, user context, passages and page
+metadata to OpenAI and can incur API charges. It does not send the video or full
+source pages. Keep keys out of git and screenshots. `store=false` is requested;
+that flag is not a claim of zero provider retention. No new SDK is required.
+
+From the repository folder in PowerShell:
+
+```powershell
+docker compose up --build -d --force-recreate
+```
+
+Open http://localhost:8000/docs:
+
+1. Use the **video ID from the actual upload response**, not Swagger's example.
+2. GET `/videos/{video_id}/retrievals` and choose a completed M5 run containing passages.
+3. Copy that run's top-level `id` and 1–12 IDs from `results[].passages[].id`.
+4. POST `/videos/{video_id}/evidence-mappings`:
+
+```json
+{
+  "retrieval_run_id": "ACTUAL_RETRIEVAL_RUN_UUID",
+  "passage_ids": ["ACTUAL_PASSAGE_UUID"]
+}
+```
+
+Those two IDs are different: one identifies the retrieval run, the other a saved
+passage within it. Each passage already links to its atomic proposition.
+
+A result contains `proposition_id`, `passage_id`, `source_id`, `citation_url`, exact
+quote offsets, and `decision` with `relationship`, `explanation`, `evidence_quote`,
+`caveats` and `causal_basis`. Relationships are SUPPORTS, CONTRADICTS, QUALIFIES,
+CONTEXT or IRRELEVANT. Ambiguity can yield `needs_review` with a null relationship.
+Inspect the quoted evidence; exact citations do not guarantee correct interpretation.
+
+HTTP 201 means a run was saved. Check its `status` and each result's `error_code`:
+- `mapping_not_configured`: missing API key or model setting.
+- `mapping_auth_failed` / `mapping_access_denied`: check credentials/model access.
+- `mapping_rate_limited`: provider quota/rate limit; no automatic paid retry.
+- `mapping_incomplete`: model output did not finish; no partial answer accepted.
+- `invalid_evidence_quote`: quotation was not an exact substring; rejected.
+- `unsupported_causal_mapping`: claimed causal support without explicit causal basis.
+
+GET `/videos/{video_id}/evidence-mappings` lists history; append `/{run_id}` to read
+one run. Re-running creates a new record. Inputs, prompt/model versions, returned
+model, token usage and source snapshots are retained. Synchronous runs are limited
+to one at a time; another request receives 503. Local JSON histories are unpaginated.
+Missing configuration fails explicitly; there is no fake offline semantic result.
+
+Tests (from repository root after installing `./backend[dev]`):
+
+```bash
+python -m pytest backend/tests -q
+```
+
+See [M6 design](docs/milestone-6.md) and [optional semantic evaluation](evaluation/mapping/README.md).
+Live model accuracy and a credentialed end-to-end trial remain acceptance work.

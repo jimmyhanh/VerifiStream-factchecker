@@ -33,6 +33,12 @@ from app.retrieval.passages import PassageExtractor, LexicalPassageExtractor
 from app.retrieval.service import RetrievalService
 
 
+from app.models.mapping import MappingRequest, MappingRun
+from app.evidence.provider import MappingProvider, OpenAIMappingProvider
+from app.evidence.repository import MappingRepository, JsonMappingRepository
+from app.evidence.service import MappingService
+
+
 def create_app(
     settings: Settings | None = None, *,
     storage: VideoStorage | None = None,
@@ -48,6 +54,8 @@ def create_app(
     source_fetcher: SourceFetcher | None = None,
     passage_extractor: PassageExtractor | None = None,
     retrieval_repository: RetrievalRepository | None = None,
+    mapping_provider: MappingProvider | None = None,
+    mapping_repository: MappingRepository | None = None,
 ) -> FastAPI:
     config = settings or Settings.from_env()
     video_storage = storage or LocalVideoStorage(config.storage_root)
@@ -55,8 +63,12 @@ def create_app(
     transcripts = transcript_repository or JsonTranscriptRepository(config.storage_root)
     claim_records = claim_repository or JsonClaimRepository(config.storage_root)
     decomposition_records = decomposition_repository or JsonDecompositionRepository(config.storage_root)
+    retrieval_records = retrieval_repository or JsonRetrievalRepository(config.storage_root)
+    mapping = MappingService(video_repository, retrieval_records,
+        mapping_repository or JsonMappingRepository(config.storage_root),
+        mapping_provider or OpenAIMappingProvider(config.openai_api_key.get_secret_value(), config.mapping_model))
     retrieval = RetrievalService(video_repository, decomposition_records,
-        retrieval_repository or JsonRetrievalRepository(config.storage_root),
+        retrieval_records,
         search_provider or BraveSearchProvider(config.brave_search_api_key.get_secret_value()),
         source_fetcher or PublicHTTPSFetcher(), passage_extractor or LexicalPassageExtractor())
     decomposition = DecompositionService(config, video_repository, claim_records,
@@ -188,6 +200,19 @@ def create_app(
     @app.get('/videos/{video_id}/retrievals/{run_id}', response_model=RetrievalRun)
     def get_retrieval(video_id: UUID, run_id: UUID) -> RetrievalRun:
         return retrieval.get(video_id, run_id)
+
+    @app.post('/videos/{video_id}/evidence-mappings', response_model=MappingRun, status_code=201)
+    def map_evidence(video_id: UUID, request: MappingRequest) -> MappingRun:
+        """Map 1–12 saved passages. 201 means run created; inspect status/errors."""
+        return mapping.create(video_id, request)
+
+    @app.get('/videos/{video_id}/evidence-mappings', response_model=list[MappingRun])
+    def list_mappings(video_id: UUID) -> list[MappingRun]:
+        return mapping.list(video_id)
+
+    @app.get('/videos/{video_id}/evidence-mappings/{run_id}', response_model=MappingRun)
+    def get_mapping(video_id: UUID, run_id: UUID) -> MappingRun:
+        return mapping.get(video_id, run_id)
 
     return app
 
