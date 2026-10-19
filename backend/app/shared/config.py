@@ -1,9 +1,10 @@
 import os
 from pathlib import Path
 from typing import Literal
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, SecretStr
 
 class Settings(BaseModel):
+    brave_search_api_key: SecretStr = SecretStr('')
     storage_root: Path = Path("storage")
     max_video_bytes: int = Field(default=100 * 1024 * 1024, gt=0)
     max_duration_seconds: int = Field(default=600, gt=0)
@@ -21,6 +22,7 @@ class Settings(BaseModel):
     @classmethod
     def from_env(cls) -> "Settings":
         return cls(
+            brave_search_api_key=os.getenv("BRAVE_SEARCH_API_KEY", ""),
             storage_root=os.getenv("STORAGE_ROOT", "storage"),
             max_video_bytes=os.getenv("MAX_VIDEO_BYTES", "104857600"),
             max_duration_seconds=os.getenv("MAX_DURATION_SECONDS", "600"),

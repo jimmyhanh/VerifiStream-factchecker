@@ -108,3 +108,23 @@ admission slot constrain processing. Source snapshots are included in history;
 production pagination, durable jobs and database transactions remain deferred.
 M5 must consume actual resolved proposition records and explicitly handle missing
 context; it must not treat needs_review parents as completed atomic facts.
+
+## Milestone 5 retrieval boundary
+
+`retrieval/service.py` consumes selected atomic propositions from a saved completed
+M4 snapshot. SearchProvider (Brave), SourceFetcher (public pinned HTTPS),
+PassageExtractor (versioned HTML normalization/lexical windows) and
+RetrievalRepository (local JSON) are replaceable. No new runtime dependency.
+`models/retrieval.py` records the source snapshot/hash, user context, queries,
+provider and algorithm versions, discovery hits, fetch outcomes, sources and exact
+passages. Terminal runs are immutable. Search snippets and generated/context text
+are not treated as fetched evidence. All source fields with unknown provenance
+remain unknown; domains are not independence groups.
+
+Public-address pinning avoids the validation/connection DNS race. Every redirect
+is validated. TLS uses the source hostname; the Brave key is sent only to its fixed
+API endpoint without redirects. This is an application-layer development control,
+not a hardened egress sandbox. Synchronous operation, OS resolver/header deadline
+limitations, growing JSON histories and missing retention remain explicit limits.
+M6 consumes candidate passages; M7 handles meaningful ranking/common origins;
+M8 and M9 produce evidence statuses and separately versioned Evidence Confidence.

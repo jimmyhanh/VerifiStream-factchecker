@@ -16,3 +16,7 @@ Its synthetic precision/recall figures do not evaluate factual verification.
 M4 decomposition coverage and faithfulness fixtures are in
 [decomposition/README.md](decomposition/README.md); these are synthetic regression
 examples, not independently annotated real-video performance.
+
+M5 passage fixtures and an optional public-fetch trial are under `retrieval/`.
+Reported lexical results are not evidence-relationship, verdict or live-search
+accuracy. See that directory's README for denominators and raw errors.

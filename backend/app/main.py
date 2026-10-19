@@ -25,6 +25,13 @@ from app.decomposition.repository import DecompositionRepository, JsonDecomposit
 from app.decomposition.service import DecompositionService
 from app.models.proposition import DecompositionRequest, DecompositionRun
 
+from app.models.retrieval import RetrievalRequest, RetrievalRun
+from app.retrieval.repository import RetrievalRepository, JsonRetrievalRepository
+from app.retrieval.search import SearchProvider, BraveSearchProvider
+from app.retrieval.fetcher import SourceFetcher, PublicHTTPSFetcher
+from app.retrieval.passages import PassageExtractor, LexicalPassageExtractor
+from app.retrieval.service import RetrievalService
+
 
 def create_app(
     settings: Settings | None = None, *,
@@ -37,14 +44,23 @@ def create_app(
     claim_repository: ClaimRepository | None = None,
     decomposition_provider: DecompositionProvider | None = None,
     decomposition_repository: DecompositionRepository | None = None,
+    search_provider: SearchProvider | None = None,
+    source_fetcher: SourceFetcher | None = None,
+    passage_extractor: PassageExtractor | None = None,
+    retrieval_repository: RetrievalRepository | None = None,
 ) -> FastAPI:
     config = settings or Settings.from_env()
     video_storage = storage or LocalVideoStorage(config.storage_root)
     video_repository = repository or JsonVideoRepository(config.storage_root)
     transcripts = transcript_repository or JsonTranscriptRepository(config.storage_root)
     claim_records = claim_repository or JsonClaimRepository(config.storage_root)
+    decomposition_records = decomposition_repository or JsonDecompositionRepository(config.storage_root)
+    retrieval = RetrievalService(video_repository, decomposition_records,
+        retrieval_repository or JsonRetrievalRepository(config.storage_root),
+        search_provider or BraveSearchProvider(config.brave_search_api_key.get_secret_value()),
+        source_fetcher or PublicHTTPSFetcher(), passage_extractor or LexicalPassageExtractor())
     decomposition = DecompositionService(config, video_repository, claim_records,
-        decomposition_repository or JsonDecompositionRepository(config.storage_root),
+        decomposition_records,
         decomposition_provider or EnglishRuleDecompositionProvider())
     claims = ClaimService(config, video_repository, transcripts,
                           claim_records,
@@ -159,6 +175,19 @@ def create_app(
     def latest_propositions(video_id: UUID) -> DecompositionRun:
         """Latest completed decomposition, including parents that need review."""
         return decomposition.latest(video_id)
+
+    @app.post('/videos/{video_id}/retrievals', response_model=RetrievalRun, status_code=201)
+    def retrieve_evidence(video_id: UUID, request: RetrievalRequest) -> RetrievalRun:
+        """Select proposition IDs. Inspect per-proposition status; passages are not verdicts."""
+        return retrieval.create(video_id, request)
+
+    @app.get('/videos/{video_id}/retrievals', response_model=list[RetrievalRun])
+    def list_retrievals(video_id: UUID) -> list[RetrievalRun]:
+        return retrieval.list(video_id)
+
+    @app.get('/videos/{video_id}/retrievals/{run_id}', response_model=RetrievalRun)
+    def get_retrieval(video_id: UUID, run_id: UUID) -> RetrievalRun:
+        return retrieval.get(video_id, run_id)
 
     return app
 

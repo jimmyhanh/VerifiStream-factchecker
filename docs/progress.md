@@ -157,3 +157,48 @@ Upstream GitHub Action deprecation notices remain non-blocking. This documentati
 update records the tested implementation without changing executable code.
 
 Draft PR: https://github.com/jimmyhanh/VerifiStream-factchecker/pull/4
+
+## Milestone 5 — October 7, 2026
+- [x] Inspect merged M4 3db6107; write docs/milestone-5.md before code.
+- [x] Replaceable Brave discovery, public HTTPS fetching, text/passages and JSON repository.
+- [x] Typed runs with decomposition snapshot/hash, exact text offsets and version metadata.
+- [x] Explicit proposition selection, missing-context outcomes and separate user context.
+- [x] Manual source URL mode, duplicate URL/content linkage and visible fetch failures.
+- [x] Create/list/specific retrieval APIs; immutable terminal history and process-local admission.
+- [x] Local regression: 161 passed, 1 optional real-ASR skip, 1 warning in 2.39 seconds.
+- [x] Six-case authored passage evaluation: 2 TP, 2 FP, 1 FN, 1 TN; exact offsets pass.
+- [x] README, environment/Compose, architecture, evaluation and workflow updated.
+- [x] Observe GitHub CI and separate public-source network trial (details below).
+- [ ] Real credentialed Brave search trial (operator API key required).
+- [ ] User review/merge and local M5 trial.
+
+Local public-source trial attempted both Python documentation URLs and returned
+`dns_failed` in the restricted authoring environment. No successful live fetching
+or Brave search is claimed from that attempt. The optional CI network trial reports
+its own result artifact; a green test job alone does not imply this trial passed.
+M5 lexical passage selection is deliberately a candidate baseline: 50% precision
+and 66.7% recall on six tiny synthetic examples are not search quality estimates.
+No evidence mapping, verdict, source-independence assessment or confidence score.
+M4 merge is confirmed as 3db6107; its unchecked combined merge/local-trial item
+above remains historical, with the local trial still unconfirmed.
+
+### Final M5 validation
+Implementation 1d8489679f2c36b95adce0827bbf2bbce749e6ac passed
+[CI run 37678381878](https://github.com/jimmyhanh/VerifiStream-factchecker/actions/runs/37678381878):
+164 tests passed, zero failures/skips, one upstream warning in 7.84 seconds.
+The container build and existing media/transcription/claim/decomposition checks
+passed. M5 API persistence and error paths are covered by the automated suite.
+Final local suite: 163 passed, one optional real-ASR skip, one warning in 2.56s.
+Real Uvicorn startup and HTTP health passed locally.
+
+The first CI live trial fetched the Python FAQ but encountered gzip on the second
+source despite requesting identity encoding. Bounded gzip support and malformed/
+oversized gzip tests were added. The final live trial fetched both URLs: 19,680 and
+9,494 extracted characters, respectively, each with three exact-offset passages.
+Both sites belong to the Python organization; this is not independent corroboration
+or a credentialed search trial. The separately logged trial was inspected directly,
+not inferred from the non-blocking job's green status.
+
+Draft PR: https://github.com/jimmyhanh/VerifiStream-factchecker/pull/5
+Implementation and automated validation are ready for review. Real Brave discovery
+requires an operator key in the untracked .env; do not send secrets in chat.

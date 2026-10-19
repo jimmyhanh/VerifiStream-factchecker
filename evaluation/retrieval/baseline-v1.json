@@ -1,0 +1,53 @@
+{
+  "scope": "Authored six-case development regression; no live search; not independent evaluation",
+  "true_positive": 2,
+  "false_positive": 2,
+  "false_negative": 1,
+  "precision": 0.5,
+  "recall": 0.6666666666666666,
+  "exact_passage_checks": true,
+  "outcomes": [
+    {
+      "query": "London opened 2 schools in 2024.",
+      "source": "London opened 2 schools in 2024.",
+      "expected_useful": true,
+      "returned": true,
+      "exact_passages": true
+    },
+    {
+      "query": "London opened 2 schools in 2024.",
+      "source": "Bananas grow in warm climates.",
+      "expected_useful": false,
+      "returned": false,
+      "exact_passages": true
+    },
+    {
+      "query": "The policy caused unemployment to decline.",
+      "source": "Unemployment declined; researchers did not study the policy.",
+      "expected_useful": false,
+      "returned": true,
+      "exact_passages": true
+    },
+    {
+      "query": "The Moon orbits Earth.",
+      "source": "Earth has one natural satellite, the Moon.",
+      "expected_useful": true,
+      "returned": true,
+      "exact_passages": true
+    },
+    {
+      "query": "Water freezes at 0 degrees Celsius.",
+      "source": "H\u2082O solidifies at zero centigrade.",
+      "expected_useful": true,
+      "returned": false,
+      "exact_passages": true
+    },
+    {
+      "query": "The city created 500 jobs.",
+      "source": "The city discussed jobs but released no employment data.",
+      "expected_useful": false,
+      "returned": true,
+      "exact_passages": true
+    }
+  ]
+}
