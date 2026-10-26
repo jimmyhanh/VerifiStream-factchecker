@@ -1,7 +1,7 @@
 name: Backend tests
 on:
   push:
-    branches: [main, milestone-1-video-ingestion, milestone-2-transcription, milestone-3-claim-detection, milestone-4-atomic-propositions, milestone-5-evidence-retrieval]
+    branches: [main, milestone-1-video-ingestion, milestone-2-transcription, milestone-3-claim-detection, milestone-4-atomic-propositions, milestone-5-evidence-retrieval, milestone-6-evidence-mapping, milestone-7-evidence-ranking]
   pull_request:
   workflow_dispatch:
 permissions:
@@ -59,6 +59,13 @@ jobs:
         with:
           name: retrieval-live-trial
           path: /tmp/retrieval-live.json
+      - name: Source dependence fixture evaluation
+        run: python evaluation/ranking/evaluate.py > /tmp/ranking-evaluation.json
+      - name: Save source dependence evaluation
+        uses: actions/upload-artifact@v4
+        with:
+          name: ranking-evaluation
+          path: /tmp/ranking-evaluation.json
       - name: HTTP server smoke test
         run: |
           python -m uvicorn app.main:app --app-dir backend --host 127.0.0.1 --port 8000 &

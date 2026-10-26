@@ -4,6 +4,8 @@ from typing import Literal
 from pydantic import BaseModel, Field, SecretStr
 
 class Settings(BaseModel):
+    openai_api_key: SecretStr = SecretStr('')
+    mapping_model: str = Field(default='', max_length=200)
     brave_search_api_key: SecretStr = SecretStr('')
     storage_root: Path = Path("storage")
     max_video_bytes: int = Field(default=100 * 1024 * 1024, gt=0)
@@ -22,6 +24,8 @@ class Settings(BaseModel):
     @classmethod
     def from_env(cls) -> "Settings":
         return cls(
+            openai_api_key=os.getenv("OPENAI_API_KEY", ""),
+            mapping_model=os.getenv("MAPPING_MODEL", ""),
             brave_search_api_key=os.getenv("BRAVE_SEARCH_API_KEY", ""),
             storage_root=os.getenv("STORAGE_ROOT", "storage"),
             max_video_bytes=os.getenv("MAX_VIDEO_BYTES", "104857600"),

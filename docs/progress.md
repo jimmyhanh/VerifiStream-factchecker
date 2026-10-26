@@ -202,3 +202,67 @@ not inferred from the non-blocking job's green status.
 Draft PR: https://github.com/jimmyhanh/VerifiStream-factchecker/pull/5
 Implementation and automated validation are ready for review. Real Brave discovery
 requires an operator key in the untracked .env; do not send secrets in chat.
+
+## Milestone 6 — 2026-10-18
+
+- [x] Inspect repository; branch from unmerged M5 without merging PR #5.
+- [x] Document implementation plan and semantic boundaries.
+- [x] Strict relationship/abstention schemas and replaceable provider interface.
+- [x] Optional OpenAI structured-output adapter, explicit model/key configuration.
+- [x] Revalidate input lineage and exact citation offsets; reject fabricated quotes.
+- [x] Preserve prompts, model IDs, usage, snapshots and immutable mapping history.
+- [x] POST/list/get mapping API; bounded selections, concurrency and partial failures.
+- [x] Authored semantic evaluation cases and opt-in live evaluation runner.
+- [x] Local regression tests: 195 passed, 1 optional real-ASR skip, 1 upstream warning.
+- [x] Observe CI and container checks for the published M6 branch.
+- [ ] Credentialed live model trial and human review of semantic outputs.
+- [ ] M5 credentialed Brave trial, dependency-order review/merge and user local trial.
+
+No key was supplied or external model invoked during implementation. Contract tests
+use deterministic fixtures and do not establish semantic accuracy or injection
+resistance. M6 adds no aggregate verdict, Evidence Confidence or source independence.
+
+### M6 CI validation and review
+Implementation `81dfc4d02661fc988ea638bfb480bf738a8060b5` passed
+[CI run 39176012000](https://github.com/jimmyhanh/VerifiStream-factchecker/actions/runs/39176012000):
+**196 tests passed in 9.19 seconds**, no failures or skips. Docker build, upload,
+real speech transcription, claim extraction and decomposition checks passed. M6 API
+and persistence are exercised by the automated suite; no live LLM was called.
+
+[Draft PR #6](https://github.com/jimmyhanh/VerifiStream-factchecker/pull/6) is stacked
+on PR #5. Both remain unmerged. The following documentation commit only records
+validation; the implementation tested by CI is the SHA above.
+
+## Milestone 7 — 2026-10-26
+
+- [x] Inspect repo and merged PRs. M5 is in main; M6 was merged afterward into the
+  M5 branch. M7 branches from that M6-containing commit and targets main.
+- [x] Write design and implementation plan before coding.
+- [x] Pure versioned ranking and conservative dependence grouping interfaces.
+- [x] Equal priority for support/contradiction/qualification; preserve all passages.
+- [x] Exact URL/content and near-copy links; transitive groups with explanations.
+- [x] Optional quoted user assessments/origins, explicitly unverified provenance.
+- [x] Unknown independence retained; no confidence, political score or verdict.
+- [x] Immutable snapshot/history API with lineage validation and error handling.
+- [x] Automated unit/API tests: local suite 212 passed, one optional real-ASR skip,
+  one upstream Starlette warning in 47.00s.
+- [x] Authored grouping evaluation: 4 TP, 0 FP, 1 FN, 3 TN. The missed paraphrased
+  copy demonstrates a known limit. Eight synthetic cases are not held-out accuracy.
+- [x] Publish draft PR and observe CI/container validation.
+- [ ] User review/merge and local ranking preview.
+- [ ] Credentialed Brave and M6 semantic acceptance (still unconfirmed).
+
+No new API keys, model calls or dependencies are needed for M7. Ranking only consumes
+existing M6 snapshots. Next milestone remains M8 evidence-based verification; M9
+Evidence Confidence is a separate later algorithm.
+
+### M7 CI and review
+Implementation `7e3176c299a445f1a7f3088aafc0168cbe9fa3ee` passed
+[CI run 40352607206](https://github.com/jimmyhanh/VerifiStream-factchecker/actions/runs/40352607206):
+**213 tests passed in 6.75s**, no skips/failures. Docker build and existing real-media
+pipeline checks passed. M7 API validation/persistence is covered in the automated
+suite. Real local Uvicorn health returned 200 and exposed the ranking routes.
+[Draft PR #7](https://github.com/jimmyhanh/VerifiStream-factchecker/pull/7) targets
+main and includes M6's previously unintegrated merge. No merge performed.
+A follow-up documentation-only commit records these results. Live Brave/M6 semantic
+acceptance is still unconfirmed and no independence accuracy claim is made.

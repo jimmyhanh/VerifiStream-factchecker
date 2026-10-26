@@ -128,3 +128,47 @@ not a hardened egress sandbox. Synchronous operation, OS resolver/header deadlin
 limitations, growing JSON histories and missing retention remain explicit limits.
 M6 consumes candidate passages; M7 handles meaningful ranking/common origins;
 M8 and M9 produce evidence statuses and separately versioned Evidence Confidence.
+
+## M6 evidence mapping boundary
+
+`MappingService` consumes an explicitly selected immutable `RetrievalRun` snapshot.
+It checks lineage and citations before invoking `MappingProvider` per selected
+passage/proposition pair. `OpenAIMappingProvider` is an optional structured-output
+adapter using a fixed HTTPS endpoint, with no SDK, tools, retries or redirect following.
+Its model and secret are environment configuration. The service validates decisions
+and exact quotes independently and derives citation URLs/offsets from stored sources.
+
+`MappingRun` stores the full retrieval snapshot/hash, request, full versioned prompt,
+requested and returned model IDs, parameters, response IDs, usage, timestamps and
+per-pair outcomes. `JsonMappingRepository` follows existing immutable-terminal-run
+semantics. Pair failures are retained; `partial` distinguishes mixed runs. Ambiguous
+pairs abstain (`needs_review`, no relationship). A semantic model error can still
+pass structural validation; review and held-out evaluation remain necessary.
+
+No dependency on final verification/confidence/ranking is introduced. Provider and
+repository interfaces allow workers and PostgreSQL adapters later. The current
+semaphore is per process, JSON storage is single-process development only, and socket
+timeouts/admission budgets do not provide hard process deadlines. See milestone-6.md.
+
+## M7 ranking and dependence boundary
+
+`RankingService` consumes a completed/partial immutable M6 snapshot and revalidates
+its M5 lineage, selected IDs, decision states and exact citation offsets. A pure
+`RankingAlgorithm` interface isolates ordering and grouping from API/persistence.
+`TransparentRankingAlgorithm` implements versioned lexicographic ordering and
+within-tier group diversity. Ranking parameters record every ordering rule. All
+opposing relationships are retained equally. Directness/primary-role annotations
+require quoted bases and remain user-supplied/unverified; unknowns are not inferred.
+
+`SourceGroup` contains deterministic UUIDs, members and reasoned pairwise dependence
+links. Exact URL/content matching and bounded near-copy heuristics detect some
+repeat reporting; caller-declared origins can link paraphrases while preserving
+provenance. Groups are connected components, not independent sources. Publisher,
+domain and publication date alone do not determine independence or source quality.
+
+`RankingRun` stores full mapping snapshot/hash, request, algorithm versions,
+parameters, warnings and timestamps. JSON terminal records are immutable and new
+algorithms create new runs. POST/list/get routes follow the preceding milestones.
+No network/LLM/dependency is introduced. The per-process semaphore and JSON files
+remain single-process development limitations; no production worker scaling is
+claimed. No final verdict/confidence computation is part of this boundary.

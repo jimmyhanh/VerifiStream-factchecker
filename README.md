@@ -546,3 +546,173 @@ corroboration. CI runs this trial separately with a saved artifact; external sit
 failure is non-blocking and must be inspected separately from the test job status.
 Brave's request/response contract is tested with fixtures; a real credentialed
 search trial remains required before claiming complete live-search validation.
+
+## Milestone 6: evidence relationships
+
+M6 builds on M5. While their PRs are open, the `milestone-6-evidence-mapping` branch
+includes both. This stage interprets saved passages against individual propositions;
+it does not compute final verdicts, Evidence Confidence or source independence.
+
+Add these to your existing root `.env` (keep your Brave settings):
+
+```dotenv
+OPENAI_API_KEY=your_private_openai_api_key
+MAPPING_MODEL=your_available_structured_output_model_id
+```
+
+Choose an available OpenAI model supporting Chat Completions with `json_schema`
+structured outputs; use a dated model snapshot for reproducibility. The model is
+explicitly configured, with no hidden fallback. See the [provider documentation](https://developers.openai.com/api/docs/guides/structured-outputs?api-mode=chat).
+Brave searches the web; this separate API analyzes claim/passage relationships.
+Mapping sends selected claim text, source quotes, user context, passages and page
+metadata to OpenAI and can incur API charges. It does not send the video or full
+source pages. Keep keys out of git and screenshots. `store=false` is requested;
+that flag is not a claim of zero provider retention. No new SDK is required.
+
+From the repository folder in PowerShell:
+
+```powershell
+docker compose up --build -d --force-recreate
+```
+
+Open http://localhost:8000/docs:
+
+1. Use the **video ID from the actual upload response**, not Swagger's example.
+2. GET `/videos/{video_id}/retrievals` and choose a completed M5 run containing passages.
+3. Copy that run's top-level `id` and 1–12 IDs from `results[].passages[].id`.
+4. POST `/videos/{video_id}/evidence-mappings`:
+
+```json
+{
+  "retrieval_run_id": "ACTUAL_RETRIEVAL_RUN_UUID",
+  "passage_ids": ["ACTUAL_PASSAGE_UUID"]
+}
+```
+
+Those two IDs are different: one identifies the retrieval run, the other a saved
+passage within it. Each passage already links to its atomic proposition.
+
+A result contains `proposition_id`, `passage_id`, `source_id`, `citation_url`, exact
+quote offsets, and `decision` with `relationship`, `explanation`, `evidence_quote`,
+`caveats` and `causal_basis`. Relationships are SUPPORTS, CONTRADICTS, QUALIFIES,
+CONTEXT or IRRELEVANT. Ambiguity can yield `needs_review` with a null relationship.
+Inspect the quoted evidence; exact citations do not guarantee correct interpretation.
+
+HTTP 201 means a run was saved. Check its `status` and each result's `error_code`:
+- `mapping_not_configured`: missing API key or model setting.
+- `mapping_auth_failed` / `mapping_access_denied`: check credentials/model access.
+- `mapping_rate_limited`: provider quota/rate limit; no automatic paid retry.
+- `mapping_incomplete`: model output did not finish; no partial answer accepted.
+- `invalid_evidence_quote`: quotation was not an exact substring; rejected.
+- `unsupported_causal_mapping`: claimed causal support without explicit causal basis.
+
+GET `/videos/{video_id}/evidence-mappings` lists history; append `/{run_id}` to read
+one run. Re-running creates a new record. Inputs, prompt/model versions, returned
+model, token usage and source snapshots are retained. Synchronous runs are limited
+to one at a time; another request receives 503. Local JSON histories are unpaginated.
+Missing configuration fails explicitly; there is no fake offline semantic result.
+
+Tests (from repository root after installing `./backend[dev]`):
+
+```bash
+python -m pytest backend/tests -q
+```
+
+See [M6 design](docs/milestone-6.md) and [optional semantic evaluation](evaluation/mapping/README.md).
+Live model accuracy and a credentialed end-to-end trial remain acceptance work.
+
+## Milestone 7: rank evidence and inspect source dependence
+
+M7 consumes an existing completed or partial M6 mapping run. It is deterministic:
+no additional API key, model call or web request is needed for ranking itself.
+The `milestone-7-evidence-ranking` branch includes M6, which had been merged into
+the M5 branch after M5 reached main. This milestone's PR targets main and brings
+both M6 and M7 into the review. No merge is performed automatically.
+
+For a preview from PowerShell in the repository folder:
+
+```powershell
+git fetch origin
+git switch milestone-7-evidence-ranking
+git pull
+docker compose up --build -d --force-recreate
+```
+
+At http://localhost:8000/docs, GET `/videos/{video_id}/evidence-mappings`. Copy the
+**top-level mapping run `id`** of a completed or partial result. POST
+`/videos/{video_id}/evidence-rankings` with the same video ID and:
+
+```json
+{
+  "mapping_run_id": "ACTUAL_MAPPING_RUN_UUID"
+}
+```
+
+Do not use a video ID, retrieval ID or passage ID in `mapping_run_id`.
+HTTP 201 means the record was created; inspect `status` and `error_code`.
+GET `/videos/{video_id}/evidence-rankings` lists runs; add `/{run_id}` to read one.
+
+Inspect `results[]` for each proposition:
+- `ranked`: claim evidence first, context next. SUPPORTS, CONTRADICTS and QUALIFIES
+  have equal priority. Contradictions are always retained.
+- `unranked`: irrelevant, failed or needs-review mappings, preserved for inspection.
+- `useful_source_count` and `useful_dependence_group_count`: neither is a count of
+  verified independent confirmations. Independence remains `unknown`.
+
+Within each relationship tier, the base order is declared directness (direct,
+indirect, unknown), declared source role (primary, secondary, unknown), descending
+lexical relevance, then passage UUID. One passage per dependence group is shown
+before a second round from the same groups, within that tier. Every passage remains
+visible. Each ranked row includes `reasons`, original relationship, source metadata,
+assessment provenance and a group ID. Ranking is not an Evidence Confidence score.
+No date, publisher reputation or political bonus is used. Unknown metadata stays unknown.
+
+`groups[]` exposes member source IDs and pairwise links:
+- Identical final URL or identical nonempty source text.
+- Suspected near-copy text: at least 100 tokens and 50 distinct 5-token shingles,
+  with Jaccard similarity >= 0.90.
+- Optional shared origin declarations from the caller, explicitly unverified.
+
+Groups include transitive links. Near-copy matching may confuse repeated boilerplate
+with syndication and miss paraphrases. Different URLs/domains do not establish
+independence. Original citations and M6 results remain in `mapping_snapshot`.
+
+Optional human annotations (omit them for the first trial):
+
+```json
+{
+  "mapping_run_id": "ACTUAL_MAPPING_RUN_UUID",
+  "assessments": {
+    "ACTUAL_PASSAGE_UUID": {
+      "directness": "direct",
+      "source_role": "primary",
+      "char_start": 0,
+      "char_end": 24,
+      "quote": "EXACT SAVED PASSAGE TEXT!",
+      "rationale": "Explain why this passage directly reports the original measurement."
+    }
+  },
+  "origins": {
+    "ACTUAL_SOURCE_UUID": {
+      "origin_url": "https://original.example/report",
+      "char_start": 30,
+      "char_end": 54,
+      "quote": "EXACT ATTRIBUTION QUOTE!!",
+      "rationale": "Explain the source's attribution to the original report."
+    }
+  }
+}
+```
+
+The example IDs, text and offsets are placeholders: replace them with actual saved
+source text. Offsets are zero-based character positions in the source snapshot,
+with an exclusive end. Assessment quotes must lie inside the selected passage;
+origin quotes may be anywhere in that saved source. Exact quote checks establish
+provenance only, not whether the caller's interpretation is correct. These inputs
+are retained as `user_supplied_unverified`; they never overwrite source metadata.
+An origin URL is not fetched. Provide public HTTPS URLs. Foreign IDs, invalid URLs
+and mismatched quotes return 422. Tampered source lineage returns 409.
+
+See [M7 design](docs/milestone-7.md) and [source-pair evaluation](evaluation/ranking/README.md).
+Test with `python -m pytest backend/tests -q` from the repository root after installing
+`./backend[dev]`. Next milestone: evidence-based verification, separate from ranking.
