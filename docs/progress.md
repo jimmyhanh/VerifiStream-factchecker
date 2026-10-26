@@ -232,3 +232,26 @@ and persistence are exercised by the automated suite; no live LLM was called.
 [Draft PR #6](https://github.com/jimmyhanh/VerifiStream-factchecker/pull/6) is stacked
 on PR #5. Both remain unmerged. The following documentation commit only records
 validation; the implementation tested by CI is the SHA above.
+
+## Milestone 7 — 2026-10-26
+
+- [x] Inspect repo and merged PRs. M5 is in main; M6 was merged afterward into the
+  M5 branch. M7 branches from that M6-containing commit and targets main.
+- [x] Write design and implementation plan before coding.
+- [x] Pure versioned ranking and conservative dependence grouping interfaces.
+- [x] Equal priority for support/contradiction/qualification; preserve all passages.
+- [x] Exact URL/content and near-copy links; transitive groups with explanations.
+- [x] Optional quoted user assessments/origins, explicitly unverified provenance.
+- [x] Unknown independence retained; no confidence, political score or verdict.
+- [x] Immutable snapshot/history API with lineage validation and error handling.
+- [x] Automated unit/API tests: local suite 212 passed, one optional real-ASR skip,
+  one upstream Starlette warning in 47.00s.
+- [x] Authored grouping evaluation: 4 TP, 0 FP, 1 FN, 3 TN. The missed paraphrased
+  copy demonstrates a known limit. Eight synthetic cases are not held-out accuracy.
+- [ ] Publish draft PR and observe CI/container validation.
+- [ ] User review/merge and local ranking preview.
+- [ ] Credentialed Brave and M6 semantic acceptance (still unconfirmed).
+
+No new API keys, model calls or dependencies are needed for M7. Ranking only consumes
+existing M6 snapshots. Next milestone remains M8 evidence-based verification; M9
+Evidence Confidence is a separate later algorithm.

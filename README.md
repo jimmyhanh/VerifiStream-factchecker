@@ -620,3 +620,99 @@ python -m pytest backend/tests -q
 
 See [M6 design](docs/milestone-6.md) and [optional semantic evaluation](evaluation/mapping/README.md).
 Live model accuracy and a credentialed end-to-end trial remain acceptance work.
+
+## Milestone 7: rank evidence and inspect source dependence
+
+M7 consumes an existing completed or partial M6 mapping run. It is deterministic:
+no additional API key, model call or web request is needed for ranking itself.
+The `milestone-7-evidence-ranking` branch includes M6, which had been merged into
+the M5 branch after M5 reached main. This milestone's PR targets main and brings
+both M6 and M7 into the review. No merge is performed automatically.
+
+For a preview from PowerShell in the repository folder:
+
+```powershell
+git fetch origin
+git switch milestone-7-evidence-ranking
+git pull
+docker compose up --build -d --force-recreate
+```
+
+At http://localhost:8000/docs, GET `/videos/{video_id}/evidence-mappings`. Copy the
+**top-level mapping run `id`** of a completed or partial result. POST
+`/videos/{video_id}/evidence-rankings` with the same video ID and:
+
+```json
+{
+  "mapping_run_id": "ACTUAL_MAPPING_RUN_UUID"
+}
+```
+
+Do not use a video ID, retrieval ID or passage ID in `mapping_run_id`.
+HTTP 201 means the record was created; inspect `status` and `error_code`.
+GET `/videos/{video_id}/evidence-rankings` lists runs; add `/{run_id}` to read one.
+
+Inspect `results[]` for each proposition:
+- `ranked`: claim evidence first, context next. SUPPORTS, CONTRADICTS and QUALIFIES
+  have equal priority. Contradictions are always retained.
+- `unranked`: irrelevant, failed or needs-review mappings, preserved for inspection.
+- `useful_source_count` and `useful_dependence_group_count`: neither is a count of
+  verified independent confirmations. Independence remains `unknown`.
+
+Within each relationship tier, the base order is declared directness (direct,
+indirect, unknown), declared source role (primary, secondary, unknown), descending
+lexical relevance, then passage UUID. One passage per dependence group is shown
+before a second round from the same groups, within that tier. Every passage remains
+visible. Each ranked row includes `reasons`, original relationship, source metadata,
+assessment provenance and a group ID. Ranking is not an Evidence Confidence score.
+No date, publisher reputation or political bonus is used. Unknown metadata stays unknown.
+
+`groups[]` exposes member source IDs and pairwise links:
+- Identical final URL or identical nonempty source text.
+- Suspected near-copy text: at least 100 tokens and 50 distinct 5-token shingles,
+  with Jaccard similarity >= 0.90.
+- Optional shared origin declarations from the caller, explicitly unverified.
+
+Groups include transitive links. Near-copy matching may confuse repeated boilerplate
+with syndication and miss paraphrases. Different URLs/domains do not establish
+independence. Original citations and M6 results remain in `mapping_snapshot`.
+
+Optional human annotations (omit them for the first trial):
+
+```json
+{
+  "mapping_run_id": "ACTUAL_MAPPING_RUN_UUID",
+  "assessments": {
+    "ACTUAL_PASSAGE_UUID": {
+      "directness": "direct",
+      "source_role": "primary",
+      "char_start": 0,
+      "char_end": 24,
+      "quote": "EXACT SAVED PASSAGE TEXT!",
+      "rationale": "Explain why this passage directly reports the original measurement."
+    }
+  },
+  "origins": {
+    "ACTUAL_SOURCE_UUID": {
+      "origin_url": "https://original.example/report",
+      "char_start": 30,
+      "char_end": 54,
+      "quote": "EXACT ATTRIBUTION QUOTE!!",
+      "rationale": "Explain the source's attribution to the original report."
+    }
+  }
+}
+```
+
+The example IDs, text and offsets are placeholders: replace them with actual saved
+source text. Offsets are zero-based character positions in the source snapshot,
+with an exclusive end. Assessment quotes must lie inside the selected passage;
+origin quotes may be anywhere in that saved source. Exact quote checks establish
+provenance only, not whether the caller's interpretation is correct. These inputs
+are retained as `user_supplied_unverified`; they never overwrite source metadata.
+An origin URL is not fetched. Provide public HTTPS URLs. Foreign IDs, invalid URLs
+and mismatched quotes return 422. Tampered source lineage returns 409.
+
+See [M7 design](docs/milestone-7.md) and [source-pair evaluation](evaluation/ranking/README.md).
+Test with `python -m pytest backend/tests -q` from the repository root after installing
+`./backend[dev]`. Next milestone: evidence-based verification, separate from ranking.

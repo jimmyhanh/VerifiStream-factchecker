@@ -1,0 +1,68 @@
+{
+  "dataset": "authored-source-pairs-v1",
+  "not_held_out": true,
+  "counts": {
+    "tp": 4,
+    "fp": 0,
+    "fn": 1,
+    "tn": 3
+  },
+  "results": [
+    {
+      "id": "identical",
+      "expected_link": true,
+      "predicted_link": true,
+      "reasons": [
+        "identical_text"
+      ]
+    },
+    {
+      "id": "near-copy",
+      "expected_link": true,
+      "predicted_link": true,
+      "reasons": [
+        "near_duplicate_text"
+      ]
+    },
+    {
+      "id": "declared-origin",
+      "expected_link": true,
+      "predicted_link": true,
+      "reasons": [
+        "shared_declared_origin"
+      ]
+    },
+    {
+      "id": "same-url",
+      "expected_link": true,
+      "predicted_link": true,
+      "reasons": [
+        "same_final_url"
+      ]
+    },
+    {
+      "id": "different-topics",
+      "expected_link": false,
+      "predicted_link": false,
+      "reasons": []
+    },
+    {
+      "id": "shared-footer",
+      "expected_link": false,
+      "predicted_link": false,
+      "reasons": []
+    },
+    {
+      "id": "short-overlap",
+      "expected_link": false,
+      "predicted_link": false,
+      "reasons": []
+    },
+    {
+      "id": "paraphrased-copy-missed",
+      "expected_link": true,
+      "predicted_link": false,
+      "reasons": []
+    }
+  ]
+}

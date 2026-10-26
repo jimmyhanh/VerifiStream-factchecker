@@ -52,3 +52,11 @@ order, configure the mapping provider, complete credentialed Brave and mapping t
 and review semantic outputs on the authored cases. Do not count fixture tests as
 model accuracy. M7 remains evidence ranking and source independence detection; M8
 verdicts and M9 confidence are still separate. Preserve the November 13 demo target.
+
+### 2026-10-26 M7 checkpoint
+M7 adds transparent per-proposition ordering and conservative source-dependence
+groups. M6 merged into the M5 branch after M5 reached main; M7's PR to main includes
+that missing integration. Review the combined diff before merging. Live M5/M6
+credentialed and semantic acceptance remains pending. M8 evidence-based verification,
+M9 Evidence Confidence and M10 dashboard remain separate. Preserve the November 13
+demo target by prioritizing uploaded-video acceptance over live-stream functionality.

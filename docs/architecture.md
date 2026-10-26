@@ -149,3 +149,26 @@ No dependency on final verification/confidence/ranking is introduced. Provider a
 repository interfaces allow workers and PostgreSQL adapters later. The current
 semaphore is per process, JSON storage is single-process development only, and socket
 timeouts/admission budgets do not provide hard process deadlines. See milestone-6.md.
+
+## M7 ranking and dependence boundary
+
+`RankingService` consumes a completed/partial immutable M6 snapshot and revalidates
+its M5 lineage, selected IDs, decision states and exact citation offsets. A pure
+`RankingAlgorithm` interface isolates ordering and grouping from API/persistence.
+`TransparentRankingAlgorithm` implements versioned lexicographic ordering and
+within-tier group diversity. Ranking parameters record every ordering rule. All
+opposing relationships are retained equally. Directness/primary-role annotations
+require quoted bases and remain user-supplied/unverified; unknowns are not inferred.
+
+`SourceGroup` contains deterministic UUIDs, members and reasoned pairwise dependence
+links. Exact URL/content matching and bounded near-copy heuristics detect some
+repeat reporting; caller-declared origins can link paraphrases while preserving
+provenance. Groups are connected components, not independent sources. Publisher,
+domain and publication date alone do not determine independence or source quality.
+
+`RankingRun` stores full mapping snapshot/hash, request, algorithm versions,
+parameters, warnings and timestamps. JSON terminal records are immutable and new
+algorithms create new runs. POST/list/get routes follow the preceding milestones.
+No network/LLM/dependency is introduced. The per-process semaphore and JSON files
+remain single-process development limitations; no production worker scaling is
+claimed. No final verdict/confidence computation is part of this boundary.
