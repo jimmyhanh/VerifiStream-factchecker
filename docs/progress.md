@@ -248,10 +248,21 @@ validation; the implementation tested by CI is the SHA above.
   one upstream Starlette warning in 47.00s.
 - [x] Authored grouping evaluation: 4 TP, 0 FP, 1 FN, 3 TN. The missed paraphrased
   copy demonstrates a known limit. Eight synthetic cases are not held-out accuracy.
-- [ ] Publish draft PR and observe CI/container validation.
+- [x] Publish draft PR and observe CI/container validation.
 - [ ] User review/merge and local ranking preview.
 - [ ] Credentialed Brave and M6 semantic acceptance (still unconfirmed).
 
 No new API keys, model calls or dependencies are needed for M7. Ranking only consumes
 existing M6 snapshots. Next milestone remains M8 evidence-based verification; M9
 Evidence Confidence is a separate later algorithm.
+
+### M7 CI and review
+Implementation `7e3176c299a445f1a7f3088aafc0168cbe9fa3ee` passed
+[CI run 40352607206](https://github.com/jimmyhanh/VerifiStream-factchecker/actions/runs/40352607206):
+**213 tests passed in 6.75s**, no skips/failures. Docker build and existing real-media
+pipeline checks passed. M7 API validation/persistence is covered in the automated
+suite. Real local Uvicorn health returned 200 and exposed the ranking routes.
+[Draft PR #7](https://github.com/jimmyhanh/VerifiStream-factchecker/pull/7) targets
+main and includes M6's previously unintegrated merge. No merge performed.
+A follow-up documentation-only commit records these results. Live Brave/M6 semantic
+acceptance is still unconfirmed and no independence accuracy claim is made.

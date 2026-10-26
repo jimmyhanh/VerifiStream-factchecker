@@ -44,3 +44,9 @@ Live M5/M6 credentialed quality acceptance remains separate and pending.
 212 automated tests passed, one optional real-ASR skip and one upstream warning.
 Eight authored dependence fixtures: 4 TP, 0 FP, 1 FN, 3 TN; the unlinked paraphrase
 is a known limitation, not independent evidence. No paid provider call was made.
+
+## CI results
+Implementation 7e3176c passed 213 tests in 6.75s and Docker checks in
+https://github.com/jimmyhanh/VerifiStream-factchecker/actions/runs/40352607206 .
+Review: https://github.com/jimmyhanh/VerifiStream-factchecker/pull/7 .
+Local Uvicorn health/OpenAPI smoke passed. No new live model test was performed.
