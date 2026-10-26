@@ -266,3 +266,16 @@ suite. Real local Uvicorn health returned 200 and exposed the ranking routes.
 main and includes M6's previously unintegrated merge. No merge performed.
 A follow-up documentation-only commit records these results. Live Brave/M6 semantic
 acceptance is still unconfirmed and no independence accuracy claim is made.
+
+## Longer-upload configuration — 2026-10-26
+
+- [x] Inspect current settings, Compose overrides and media duration checks.
+- [x] Raise development defaults to 1800 seconds / 500 MiB, FFmpeg timeout 600
+  seconds and transcription timeout 1800 seconds; preserve environment overrides.
+- [x] Document existing .env migration and distinguish processing time from duration.
+- [x] Local regression suite: 215 passed, one optional ASR skip, one upstream warning.
+- [x] Generated 1800-second video: upload HTTP 201 and completed real FFmpeg audio extraction.
+- [ ] Observe CI/container checks for this configuration PR.
+- [ ] Operator trial with a real longer video on the user's hardware.
+
+No new livestream implementation or performance claim. M8 remains the next milestone.

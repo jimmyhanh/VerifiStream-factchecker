@@ -158,10 +158,10 @@ def test_adapter_failure_payload(tmp_path, payload, code):
 
 def test_adapter_success(tmp_path):
     def execute(args, **kwargs):
-        assert kwargs['timeout'] == 900
+        assert kwargs['timeout'] == 77
         Path(args[4]).write_text(result().model_dump_json())
     with patch('app.transcription.provider.subprocess.run', side_effect=execute):
-        assert FasterWhisperProvider(Settings()).transcribe(tmp_path / 'audio.wav', 'en').text == 'Hello world.'
+        assert FasterWhisperProvider(Settings(transcription_timeout_seconds=77)).transcribe(tmp_path / 'audio.wav', 'en').text == 'Hello world.'
 
 
 def test_busy_and_capacity_released_after_failure(setup):
