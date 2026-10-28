@@ -1,7 +1,7 @@
 name: Backend tests
 on:
   push:
-    branches: [main, milestone-1-video-ingestion, milestone-2-transcription, milestone-3-claim-detection, milestone-4-atomic-propositions, milestone-5-evidence-retrieval, milestone-6-evidence-mapping, milestone-7-evidence-ranking, milestone-8-evidence-verification]
+    branches: [main, milestone-1-video-ingestion, milestone-2-transcription, milestone-3-claim-detection, milestone-4-atomic-propositions, milestone-5-evidence-retrieval, milestone-6-evidence-mapping, milestone-7-evidence-ranking, milestone-8-evidence-verification, milestone-9-evidence-confidence]
   pull_request:
   workflow_dispatch:
 permissions:

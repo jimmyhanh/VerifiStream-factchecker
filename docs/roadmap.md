@@ -67,3 +67,11 @@ and rule evaluation. Main now includes M6/M7 and longer-upload PR #8. M8 adds no
 paid model calls and does not complete the still-unconfirmed M5/M6 live quality
 acceptance. Next: M9 versioned Evidence Confidence, then M10 dashboard and an
 uploaded-video demo by November 13. Real-time work remains deferred.
+
+## October 28 — M9 implementation
+
+M8 PR #9 is merged. M9 adds a separate versioned evidence adequacy score, component
+breakdowns, conservative caps, immutable run APIs, and authored policy regression
+cases. The score is explicitly uncalibrated; source quality, temporal adequacy and
+independence are unknown. Human-held-out calibration remains open. M10 dashboard is
+next, followed by the November 8–13 integration, evaluation and demonstration gates.

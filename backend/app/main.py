@@ -49,6 +49,10 @@ from app.models.verification import VerificationRequest, VerificationRun
 from app.verification.policy import VerificationPolicy, SelectedEvidencePolicy
 from app.verification.repository import VerificationRepository, JsonVerificationRepository
 from app.verification.service import VerificationService
+from app.models.confidence import ConfidenceRequest, ConfidenceRun
+from app.confidence.algorithm import ConfidenceAlgorithm, TransparentConfidenceAlgorithm
+from app.confidence.repository import ConfidenceRepository, JsonConfidenceRepository
+from app.confidence.service import ConfidenceService
 
 
 def create_app(
@@ -72,6 +76,8 @@ def create_app(
     ranking_algorithm: RankingAlgorithm | None = None,
     verification_repository: VerificationRepository | None = None,
     verification_policy: VerificationPolicy | None = None,
+    confidence_repository: ConfidenceRepository | None = None,
+    confidence_algorithm: ConfidenceAlgorithm | None = None,
 ) -> FastAPI:
     config = settings or Settings.from_env()
     video_storage = storage or LocalVideoStorage(config.storage_root)
@@ -82,8 +88,12 @@ def create_app(
     retrieval_records = retrieval_repository or JsonRetrievalRepository(config.storage_root)
     mapping_records = mapping_repository or JsonMappingRepository(config.storage_root)
     ranking_records = ranking_repository or JsonRankingRepository(config.storage_root)
+    verification_records = verification_repository or JsonVerificationRepository(config.storage_root)
+    confidence = ConfidenceService(video_repository, verification_records,
+        confidence_repository or JsonConfidenceRepository(config.storage_root),
+        confidence_algorithm or TransparentConfidenceAlgorithm())
     verification = VerificationService(video_repository, ranking_records,
-        verification_repository or JsonVerificationRepository(config.storage_root),
+        verification_records,
         verification_policy or SelectedEvidencePolicy())
     ranking = RankingService(video_repository, mapping_records,
         ranking_records,
@@ -250,6 +260,19 @@ def create_app(
     @app.get('/videos/{video_id}/evidence-rankings/{run_id}', response_model=RankingRun)
     def get_ranking(video_id: UUID, run_id: UUID) -> RankingRun:
         return ranking.get(video_id, run_id)
+
+    @app.post('/videos/{video_id}/confidence-runs', response_model=ConfidenceRun, status_code=201)
+    def create_confidence(video_id: UUID, request: ConfidenceRequest) -> ConfidenceRun:
+        """Score a completed verification; this is not a truth probability."""
+        return confidence.create(video_id, request)
+
+    @app.get('/videos/{video_id}/confidence-runs', response_model=list[ConfidenceRun])
+    def list_confidence(video_id: UUID) -> list[ConfidenceRun]:
+        return confidence.list(video_id)
+
+    @app.get('/videos/{video_id}/confidence-runs/{run_id}', response_model=ConfidenceRun)
+    def get_confidence(video_id: UUID, run_id: UUID) -> ConfidenceRun:
+        return confidence.get(video_id, run_id)
 
     @app.post('/videos/{video_id}/verifications', response_model=VerificationRun, status_code=201)
     def verify_evidence(video_id: UUID, request: VerificationRequest) -> VerificationRun:
