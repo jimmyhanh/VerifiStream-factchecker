@@ -22,7 +22,7 @@ def probe_payload(kinds=("video", "audio"), duration="1", container="mov,mp4"):
     (probe_payload(container="avi"), "invalid_media"),
 ])
 def test_probe_validates_actual_media(payload, code):
-    media = FFmpegProcessor(Settings())
+    media = FFmpegProcessor(Settings(max_duration_seconds=600))
     with patch.object(media, "_run", return_value=payload):
         with pytest.raises(ServiceError) as error:
             media.probe(Path("input"), ".mp4")

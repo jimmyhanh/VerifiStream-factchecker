@@ -50,8 +50,8 @@ curl http://localhost:8000/videos/REPLACE_WITH_RETURNED_UUID
 On Windows PowerShell use `curl.exe` for these examples.
 
 POST /videos receives one multipart field named `file`.
-Allowed containers: MP4, MOV, WebM, MKV. Default maximum: 100 MiB and
-600 seconds; the file must contain both video and audio.
+Allowed containers: MP4, MOV, WebM, MKV. Default maximum: 500 MiB and
+1800 seconds (30 minutes); the file must contain both video and audio.
 application/octet-stream is accepted for supported extensions, but FFprobe
 still validates the actual container/streams.
 
@@ -193,7 +193,7 @@ Set values in .env for Compose, then recreate with `docker compose up --build`:
 - TRANSCRIPTION_MODEL_REVISION: main by default; use a model commit SHA to pin it.
   An existing cached main snapshot is reused, including offline; change to an
   explicit revision to upgrade reproducibly. Each result records its resolved SHA.
-- TRANSCRIPTION_TIMEOUT_SECONDS: 900 including model loading and inference.
+- TRANSCRIPTION_TIMEOUT_SECONDS: 1800 including model loading and inference.
 - TRANSCRIPTION_THREADS: 4 by default.
 - MODEL_CACHE: local Python path; Compose fixes this at /srv/storage/models.
 
@@ -716,3 +716,38 @@ and mismatched quotes return 422. Tampered source lineage returns 409.
 See [M7 design](docs/milestone-7.md) and [source-pair evaluation](evaluation/ranking/README.md).
 Test with `python -m pytest backend/tests -q` from the repository root after installing
 `./backend[dev]`. Next milestone: evidence-based verification, separate from ranking.
+
+## Longer uploaded videos
+
+Development defaults now allow **30 minutes / 500 MiB**, with a **600-second timeout
+per FFmpeg/FFprobe subprocess** and **1800 seconds for transcription**, including
+model loading. Processing time is separate from media duration; slower CPUs may
+need a larger transcription timeout. This configuration is not a 30-minute
+end-to-end performance guarantee. Uploads and transcription remain synchronous.
+
+Your existing `.env` overrides new defaults. Change only these four lines, preserving
+all API keys and other settings:
+
+```dotenv
+MAX_DURATION_SECONDS=1800
+MAX_VIDEO_BYTES=524288000
+PROCESS_TIMEOUT_SECONDS=600
+TRANSCRIPTION_TIMEOUT_SECONDS=1800
+```
+
+After pulling this change, apply it with:
+
+```powershell
+docker compose up --build -d --force-recreate
+```
+
+For later `.env`-only adjustments, `docker compose up -d --force-recreate` is enough.
+Do not replace your existing `.env` with the example file. Direct Python runs require
+these values in the process environment; `.env` is not loaded automatically.
+Existing duration/size validation stays enabled and environment overrides still work.
+Later claim extraction retains its separate 100,000-character default transcript
+limit; raising upload limits does not automatically increase downstream limits.
+
+Live processing remains a later milestone: bounded audio chunks, continuous
+transcription context, background jobs and incremental result delivery. Longer file
+uploads do not implement livestream capture or real-time checking.
