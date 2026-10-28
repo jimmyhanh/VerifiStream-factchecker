@@ -50,3 +50,9 @@ measure rule behavior, not factual accuracy of the full pipeline.
 250 tests passed, one optional real-ASR skip and one upstream warning in 15.12s.
 Real Uvicorn health and verification OpenAPI checks passed. All twelve authored,
 preclassified policy cases matched expectations; this is not end-to-end accuracy.
+
+## CI validation
+Implementation a15be70 passed 251 tests in 13.33s and Docker checks:
+https://github.com/jimmyhanh/VerifiStream-factchecker/actions/runs/40730890484 .
+Draft review: https://github.com/jimmyhanh/VerifiStream-factchecker/pull/9 .
+No live semantic accuracy or confidence calibration is claimed.
