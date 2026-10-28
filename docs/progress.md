@@ -279,3 +279,33 @@ acceptance is still unconfirmed and no independence accuracy claim is made.
 - [ ] Operator trial with a real longer video on the user's hardware.
 
 No new livestream implementation or performance claim. M8 remains the next milestone.
+
+## Milestone 8 — 2026-10-28
+
+- [x] Inspect main (includes M6/M7 and longer-upload PR #8); write implementation plan.
+- [x] Implement versioned selected-evidence policy for all five evidence statuses.
+- [x] Preserve disagreements without vote counts, including within dependence groups.
+- [x] Explicit selected/unresolved/unmapped coverage and insufficient-evidence results.
+- [x] Exact citations, original proposition/timestamps, inherited explanations/caveats.
+- [x] Revalidate lineage and replay known M7 outputs; reject unknown versions.
+- [x] POST/list/get API, immutable snapshot histories and sanitized failures.
+- [x] Local suite: 250 passed, one optional real-ASR skip, one upstream warning in 15.12s.
+- [x] Real Uvicorn health HTTP 200 and verification OpenAPI routes confirmed.
+- [x] Twelve authored preclassified policy cases agree with the rules (not factual accuracy).
+- [x] Publish draft PR and observe CI/container results.
+- [ ] Operator local trial, review and merge.
+- [ ] Credentialed M5/M6 semantic acceptance remains unconfirmed.
+
+M8 makes no new model/search call and computes no Evidence Confidence. The status
+scope is selected retrieved evidence; one-source support does not mean independent
+corroboration. Unmapped retrieved passages remain explicitly outside the selected
+scope. Next milestone is M9; no aggregate compound-statement verdict is introduced.
+
+### M8 CI and review
+Implementation `a15be70b5ea1434cd9912a2af80f5184766923b1` passed
+[CI run 40730890484](https://github.com/jimmyhanh/VerifiStream-factchecker/actions/runs/40730890484):
+**251 tests passed in 13.33s**, no skips/failures. Docker build and existing
+real-media pipeline checks passed. M8 API persistence, statuses and citations are
+covered by the automated suite, not a credentialed live accuracy test.
+[Draft PR #9](https://github.com/jimmyhanh/VerifiStream-factchecker/pull/9) targets
+main. No merge performed. The following docs-only commit records these results.

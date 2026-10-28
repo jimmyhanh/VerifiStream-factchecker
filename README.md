@@ -751,3 +751,83 @@ limit; raising upload limits does not automatically increase downstream limits.
 Live processing remains a later milestone: bounded audio chunks, continuous
 transcription context, background jobs and incremental result delivery. Longer file
 uploads do not implement livestream capture or real-time checking.
+
+## Milestone 8: evidence-based verification statuses
+
+M8 summarizes the **selected retrieved evidence** for each atomic proposition. It
+uses the saved M6 relationships and M7 source groups; it makes no new model/search
+call and needs no additional key. It does not assign a universal true/false verdict
+or Evidence Confidence. A Supported result may have only one source; independent
+corroboration is not implied.
+
+To preview the unmerged milestone from the repository folder:
+
+```powershell
+git fetch origin
+git switch milestone-8-evidence-verification
+git pull
+docker compose up --build -d --force-recreate
+```
+
+Open http://localhost:8000/docs. GET `/videos/{video_id}/evidence-rankings` and copy
+the **top-level `id` of a completed ranking run**. POST `/videos/{video_id}/verifications`
+using that same actual video ID and:
+
+```json
+{
+  "ranking_run_id": "ACTUAL_RANKING_RUN_UUID"
+}
+```
+
+Use the ranking run ID, not a mapping, passage or video ID. GET
+`/videos/{video_id}/verifications` lists history; append `/{run_id}` to inspect one.
+HTTP 201 means a run was saved. `status: completed` means processing finished, not
+that every proposition has enough evidence. Check each result's `evidence_status`.
+
+The policy applies these rules in order:
+
+| Selected evidence | Evidence status |
+| --- | --- |
+| CONTRADICTS and either SUPPORTS or QUALIFIES | Conflicting Evidence |
+| Any selected mapping failed or needs review (without a known conflict) | Insufficient Evidence |
+| CONTRADICTS, without support/qualification | Contradicted |
+| QUALIFIES, with or without SUPPORTS | Partially Supported |
+| SUPPORTS, without contradiction/qualification | Supported |
+| Only context/irrelevant evidence, or no selected mappings | Insufficient Evidence |
+
+Contradictions cannot be outvoted by repeated articles. Conflicts remain visible even
+within one dependence group. Ranking position, lexical scores and unverified quality
+annotations do not determine the status. Missing evidence never means false.
+
+Each result includes the proposition and parent candidate IDs, original source quote,
+video timestamps, rule ID, explanation, exact evidence quotations/offsets, URLs,
+page metadata, inherited M6 explanations/caveats and group relationships. No combined
+verdict is assigned across the parts of a compound statement.
+
+**Inspect `coverage` and `limitations`.** Unmapped M5 passages are counted but remain
+outside this explicitly selected evidence set; a Supported result does not claim
+all retrieved passages were checked. Every proposition selected by M5 appears,
+including ones without selected M6 passages, which receive Insufficient Evidence.
+Failed/needs-review M6 selections are listed and block an unopposed status. Source
+independence stays unknown; group counts are not independent-confirmation counts.
+
+Upstream model interpretations can be wrong. Exact quotes prove where text came
+from, not whether the model understood its dates, quantities, attribution or causal
+meaning correctly. M8 preserves those limitations and performs no fresh temporal
+or causal adjudication. Inspect the saved snapshot before using a result.
+
+Missing run IDs return 404; failed/in-progress rankings or inconsistent snapshots
+return 409. Unknown M7 algorithm versions/parameters return `unsupported_ranking_version`;
+create a ranking with a supported version rather than editing stored records.
+Concurrent verification returns 503; unexpected policy failures are saved with
+`verification_failed`. New attempts create new histories; old results are retained.
+
+See [M8 design](docs/milestone-8.md) and [policy evaluation](evaluation/verification/README.md).
+From the root after installing `./backend[dev]`:
+
+```bash
+python -m pytest backend/tests -q
+python evaluation/verification/evaluate.py
+```
+
+M9 adds the separate Evidence Confidence algorithm. The frontend remains M10.

@@ -1,0 +1,93 @@
+{
+  "dataset": "authored-verification-policy-v1",
+  "not_held_out": true,
+  "preclassified_evidence": true,
+  "matches": 12,
+  "total": 12,
+  "results": [
+    {
+      "id": "support",
+      "expected": "Supported",
+      "actual": "Supported",
+      "rule_id": "supporting_evidence",
+      "matches_policy_expectation": true
+    },
+    {
+      "id": "contradiction",
+      "expected": "Contradicted",
+      "actual": "Contradicted",
+      "rule_id": "contradictory_evidence",
+      "matches_policy_expectation": true
+    },
+    {
+      "id": "qualification",
+      "expected": "Partially Supported",
+      "actual": "Partially Supported",
+      "rule_id": "qualified_evidence",
+      "matches_policy_expectation": true
+    },
+    {
+      "id": "support-and-qualification",
+      "expected": "Partially Supported",
+      "actual": "Partially Supported",
+      "rule_id": "qualified_evidence",
+      "matches_policy_expectation": true
+    },
+    {
+      "id": "opposition",
+      "expected": "Conflicting Evidence",
+      "actual": "Conflicting Evidence",
+      "rule_id": "opposing_evidence",
+      "matches_policy_expectation": true
+    },
+    {
+      "id": "partial-opposition",
+      "expected": "Conflicting Evidence",
+      "actual": "Conflicting Evidence",
+      "rule_id": "opposing_evidence",
+      "matches_policy_expectation": true
+    },
+    {
+      "id": "no-evidence",
+      "expected": "Insufficient Evidence",
+      "actual": "Insufficient Evidence",
+      "rule_id": "no_decisive_evidence",
+      "matches_policy_expectation": true
+    },
+    {
+      "id": "outdated-context",
+      "expected": "Insufficient Evidence",
+      "actual": "Insufficient Evidence",
+      "rule_id": "no_decisive_evidence",
+      "matches_policy_expectation": true
+    },
+    {
+      "id": "causal-context",
+      "expected": "Insufficient Evidence",
+      "actual": "Insufficient Evidence",
+      "rule_id": "no_decisive_evidence",
+      "matches_policy_expectation": true
+    },
+    {
+      "id": "duplicate-reports",
+      "expected": "Conflicting Evidence",
+      "actual": "Conflicting Evidence",
+      "rule_id": "opposing_evidence",
+      "matches_policy_expectation": true
+    },
+    {
+      "id": "failed-selected-mapping",
+      "expected": "Insufficient Evidence",
+      "actual": "Insufficient Evidence",
+      "rule_id": "unresolved_selected_mappings",
+      "matches_policy_expectation": true
+    },
+    {
+      "id": "conflict-and-review",
+      "expected": "Conflicting Evidence",
+      "actual": "Conflicting Evidence",
+      "rule_id": "opposing_evidence",
+      "matches_policy_expectation": true
+    }
+  ]
+}
