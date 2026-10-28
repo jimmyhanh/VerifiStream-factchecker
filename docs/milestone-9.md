@@ -73,3 +73,14 @@ No additional environment variables are required.
 Held-out human adjudicated evaluation and calibration are deferred. This milestone
 does not claim a calibrated confidence score. Next: M10 dashboard, then M11 jobs and
 caching, and M12 live input. Local JSON is still a single-process development adapter.
+
+
+## Observed validation — October 28, 2026
+
+Implementation `ba3f7df4969e3625286c08f8838013d870305e56`: local full suite
+276 passed, 1 optional ASR skip; CI 277 passed in 11.65 seconds with no skips.
+[CI run](https://github.com/jimmyhanh/VerifiStream-factchecker/actions/runs/40775966145)
+also passed Docker build and existing real-media/transcription/claim/decomposition
+container checks. All ten authored confidence cases matched exact expected scores.
+Real Uvicorn HTTP health and M9 OpenAPI routes were verified locally. These results
+establish regression behavior, not confidence calibration or real-world accuracy.
