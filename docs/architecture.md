@@ -172,3 +172,26 @@ algorithms create new runs. POST/list/get routes follow the preceding milestones
 No network/LLM/dependency is introduced. The per-process semaphore and JSON files
 remain single-process development limitations; no production worker scaling is
 claimed. No final verdict/confidence computation is part of this boundary.
+
+## M8 verification boundary
+
+`VerificationService` accepts a completed `RankingRun`. It revalidates mapping and
+retrieval ancestry and exact citations, then replays the known M7 version and
+parameters to detect altered ranking/group outputs. Unsupported versions are
+rejected explicitly; future versions need an adapter/registry, not silent reinterpretation.
+`VerificationPolicy` is independent of LLM/search providers, storage and confidence.
+`SelectedEvidencePolicy` implements ordered, deterministic relationship rules with
+no vote counts, ranking weights or internal-knowledge facts.
+
+All M5-selected propositions receive results. Coverage separates selected M6 evidence,
+unresolved selected mappings and retrieved-but-unmapped passages. Status scope is
+explicitly selected evidence. Exact quotes, URLs and metadata are copied from saved
+sources; M6 explanations/caveats are attributed interpretations. Group label sets
+preserve disagreement inside duplicate groups and never claim source independence.
+
+`VerificationRun` retains the full ranking snapshot/hash, request, policy version,
+parameters, timestamps, rule IDs and per-proposition evidence summaries. Terminal
+JSON histories are immutable; larger nested snapshots increase development disk
+usage. POST/list/get routes and a per-process semaphore follow prior milestones.
+No verdict across compound claims or Evidence Confidence is introduced. Upstream
+semantic errors remain possible even after structural and lineage validation.

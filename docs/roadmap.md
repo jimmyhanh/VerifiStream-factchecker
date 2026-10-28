@@ -60,3 +60,10 @@ that missing integration. Review the combined diff before merging. Live M5/M6
 credentialed and semantic acceptance remains pending. M8 evidence-based verification,
 M9 Evidence Confidence and M10 dashboard remain separate. Preserve the November 13
 demo target by prioritizing uploaded-video acceptance over live-stream functionality.
+
+### 2026-10-28 M8 checkpoint
+Build evidence-scoped statuses over M6/M7 with exact citations, immutable history
+and rule evaluation. Main now includes M6/M7 and longer-upload PR #8. M8 adds no
+paid model calls and does not complete the still-unconfirmed M5/M6 live quality
+acceptance. Next: M9 versioned Evidence Confidence, then M10 dashboard and an
+uploaded-video demo by November 13. Real-time work remains deferred.

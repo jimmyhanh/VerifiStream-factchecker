@@ -45,6 +45,12 @@ from app.ranking.repository import RankingRepository, JsonRankingRepository
 from app.ranking.service import RankingService
 
 
+from app.models.verification import VerificationRequest, VerificationRun
+from app.verification.policy import VerificationPolicy, SelectedEvidencePolicy
+from app.verification.repository import VerificationRepository, JsonVerificationRepository
+from app.verification.service import VerificationService
+
+
 def create_app(
     settings: Settings | None = None, *,
     storage: VideoStorage | None = None,
@@ -64,6 +70,8 @@ def create_app(
     mapping_repository: MappingRepository | None = None,
     ranking_repository: RankingRepository | None = None,
     ranking_algorithm: RankingAlgorithm | None = None,
+    verification_repository: VerificationRepository | None = None,
+    verification_policy: VerificationPolicy | None = None,
 ) -> FastAPI:
     config = settings or Settings.from_env()
     video_storage = storage or LocalVideoStorage(config.storage_root)
@@ -73,8 +81,12 @@ def create_app(
     decomposition_records = decomposition_repository or JsonDecompositionRepository(config.storage_root)
     retrieval_records = retrieval_repository or JsonRetrievalRepository(config.storage_root)
     mapping_records = mapping_repository or JsonMappingRepository(config.storage_root)
+    ranking_records = ranking_repository or JsonRankingRepository(config.storage_root)
+    verification = VerificationService(video_repository, ranking_records,
+        verification_repository or JsonVerificationRepository(config.storage_root),
+        verification_policy or SelectedEvidencePolicy())
     ranking = RankingService(video_repository, mapping_records,
-        ranking_repository or JsonRankingRepository(config.storage_root),
+        ranking_records,
         ranking_algorithm or TransparentRankingAlgorithm())
     mapping = MappingService(video_repository, retrieval_records,
         mapping_records,
@@ -238,6 +250,19 @@ def create_app(
     @app.get('/videos/{video_id}/evidence-rankings/{run_id}', response_model=RankingRun)
     def get_ranking(video_id: UUID, run_id: UUID) -> RankingRun:
         return ranking.get(video_id, run_id)
+
+    @app.post('/videos/{video_id}/verifications', response_model=VerificationRun, status_code=201)
+    def verify_evidence(video_id: UUID, request: VerificationRequest) -> VerificationRun:
+        """Summarize selected evidence; inspect coverage, citations and limitations."""
+        return verification.create(video_id, request)
+
+    @app.get('/videos/{video_id}/verifications', response_model=list[VerificationRun])
+    def list_verifications(video_id: UUID) -> list[VerificationRun]:
+        return verification.list(video_id)
+
+    @app.get('/videos/{video_id}/verifications/{run_id}', response_model=VerificationRun)
+    def get_verification(video_id: UUID, run_id: UUID) -> VerificationRun:
+        return verification.get(video_id, run_id)
 
     return app
 

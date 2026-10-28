@@ -1,0 +1,14 @@
+[
+  {"id":"support","scenario":"A matching report supports the exact quantity and period.","labels":["SUPPORTS"],"unresolved":false,"expected":"Supported"},
+  {"id":"contradiction","scenario":"A matching report contradicts the exact quantity and period.","labels":["CONTRADICTS"],"unresolved":false,"expected":"Contradicted"},
+  {"id":"qualification","scenario":"Evidence narrows an all-residents claim to eligible residents.","labels":["QUALIFIES"],"unresolved":false,"expected":"Partially Supported"},
+  {"id":"support-and-qualification","scenario":"A supportive passage has a material qualification in another passage.","labels":["SUPPORTS","QUALIFIES"],"unresolved":false,"expected":"Partially Supported"},
+  {"id":"opposition","scenario":"Relevant sources give incompatible accounts of the same proposition.","labels":["SUPPORTS","CONTRADICTS"],"unresolved":false,"expected":"Conflicting Evidence"},
+  {"id":"partial-opposition","scenario":"One passage provides partial support while another contradicts it.","labels":["QUALIFIES","CONTRADICTS"],"unresolved":false,"expected":"Conflicting Evidence"},
+  {"id":"no-evidence","scenario":"No passage was mapped for this proposition.","labels":[],"unresolved":false,"expected":"Insufficient Evidence"},
+  {"id":"outdated-context","scenario":"M6 correctly labels a different-period report as context, not current support.","labels":["CONTEXT"],"unresolved":false,"expected":"Insufficient Evidence"},
+  {"id":"causal-context","scenario":"M6 correctly labels a temporal association as context, not causal support.","labels":["CONTEXT","IRRELEVANT"],"unresolved":false,"expected":"Insufficient Evidence"},
+  {"id":"duplicate-reports","scenario":"Eight repeats of supportive reporting cannot outvote one contradiction.","labels":["SUPPORTS","SUPPORTS","SUPPORTS","SUPPORTS","SUPPORTS","SUPPORTS","SUPPORTS","SUPPORTS","CONTRADICTS"],"unresolved":false,"expected":"Conflicting Evidence"},
+  {"id":"failed-selected-mapping","scenario":"One support mapping is resolved but another selected passage failed.","labels":["SUPPORTS"],"unresolved":true,"expected":"Insufficient Evidence"},
+  {"id":"conflict-and-review","scenario":"A known conflict stays visible while an additional passage needs review.","labels":["SUPPORTS","CONTRADICTS"],"unresolved":true,"expected":"Conflicting Evidence"}
+]

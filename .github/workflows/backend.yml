@@ -1,7 +1,7 @@
 name: Backend tests
 on:
   push:
-    branches: [main, milestone-1-video-ingestion, milestone-2-transcription, milestone-3-claim-detection, milestone-4-atomic-propositions, milestone-5-evidence-retrieval, milestone-6-evidence-mapping, milestone-7-evidence-ranking]
+    branches: [main, milestone-1-video-ingestion, milestone-2-transcription, milestone-3-claim-detection, milestone-4-atomic-propositions, milestone-5-evidence-retrieval, milestone-6-evidence-mapping, milestone-7-evidence-ranking, milestone-8-evidence-verification]
   pull_request:
   workflow_dispatch:
 permissions:
@@ -66,6 +66,13 @@ jobs:
         with:
           name: ranking-evaluation
           path: /tmp/ranking-evaluation.json
+      - name: Verification policy fixture evaluation
+        run: python evaluation/verification/evaluate.py > /tmp/verification-evaluation.json
+      - name: Save verification policy evaluation
+        uses: actions/upload-artifact@v4
+        with:
+          name: verification-evaluation
+          path: /tmp/verification-evaluation.json
       - name: HTTP server smoke test
         run: |
           python -m uvicorn app.main:app --app-dir backend --host 127.0.0.1 --port 8000 &

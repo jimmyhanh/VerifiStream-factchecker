@@ -28,3 +28,6 @@ M7: `ranking/` runs eight authored source-pair fixtures without network/API call
 The target is detecting known dependence, never proving independence. The paraphrase
 fixture documents a baseline false negative; do not equate fixture success with
 real-world source provenance accuracy.
+
+M8: `verification/` evaluates twelve preclassified authored policy fixtures. These
+measure deterministic status-rule agreement only, not full-pipeline factual accuracy.
