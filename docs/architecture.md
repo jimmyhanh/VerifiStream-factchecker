@@ -195,3 +195,25 @@ JSON histories are immutable; larger nested snapshots increase development disk
 usage. POST/list/get routes and a per-process semaphore follow prior milestones.
 No verdict across compound claims or Evidence Confidence is introduced. Upstream
 semantic errors remain possible even after structural and lineage validation.
+
+## M9 confidence boundary
+
+`ConfidenceService` consumes an explicitly selected completed `VerificationRun`.
+It verifies ancestry/hash and replays known M7/M8 policies before invoking the pure
+`ConfidenceAlgorithm` interface. `TransparentConfidenceAlgorithm` computes an
+uncalibrated evidence adequacy heuristic, independently of M8 status selection.
+It does not call a model, retrieve new evidence, or alter an existing status.
+
+Typed per-proposition results expose all weighted components, raw sum, applied caps,
+unknown signals and limitations. Suspected source copies are grouped before amount
+and relevance aggregation; agreement never uses majority counts. Source quality,
+independence and temporal adequacy remain unknown, limiting the maximum score.
+Unverified annotations are retained in the snapshot but do not earn score bonuses.
+The exact formula/version contract is in `milestone-9.md`.
+
+`ConfidenceRun` stores the full verification snapshot/hash, algorithm version and
+parameters, timestamps and results. POST/list/get `/confidence-runs` routes use a
+separate repository interface and immutable terminal JSON records. CPU-only scoring
+is synchronous with per-process admission; there is no cross-process coordination,
+authentication or production database migration in M9. These boundaries allow a
+future worker/repository adapter without moving scoring logic into the API.

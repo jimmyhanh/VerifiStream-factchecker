@@ -1,8 +1,11 @@
 # VerifiStream — evidence-based fact checker
 
-Semester project, September–December 2026. **Milestones 1–4:** uploaded video, audio, timestamped transcription, experimental
-English claim detection and conservative atomic decomposition. Retrieval,
-verification, Evidence Confidence and the frontend are not implemented.
+Semester project, September–December 2026. **Milestones 1–9:** uploaded video,
+audio extraction, timestamped transcription, experimental English claim detection,
+atomic decomposition, evidence retrieval, relationship mapping, source dependence
+ranking, evidence-based statuses, and a separate experimental Evidence Confidence
+score. The score is uncalibrated and is not a probability of truth. The frontend
+is next (M10); the current interface is the API documentation.
 
 ## Run with Docker (recommended)
 Install Docker with Compose, then run from the repository root:
@@ -831,3 +834,58 @@ python evaluation/verification/evaluate.py
 ```
 
 M9 adds the separate Evidence Confidence algorithm. The frontend remains M10.
+
+
+## Milestone 9: Evidence Confidence
+
+Create a separate score run from a **completed M8 verification run**:
+
+```http
+POST /videos/{video_id}/confidence-runs
+Content-Type: application/json
+
+{"verification_run_id": "YOUR_COMPLETED_M8_RUN_UUID"}
+```
+
+Use the actual upload video UUID in the path and the actual verification response
+`id` in the body, not a Swagger example UUID. List saved runs with
+`GET /videos/{video_id}/confidence-runs`; fetch one by appending its returned `id`.
+In Swagger, expand POST, choose **Try it out**, enter both IDs, then **Execute**.
+Check the run's `status`; HTTP 201 alone does not mean scoring succeeded.
+
+Each proposition exposes `evidence_confidence` (display **Evidence Confidence: N%**),
+its unchanged evidence status, five weighted `components`, `raw_score`, all applicable
+`caps`, `unknown_signals`, `calibrated: false`, and limitations. Inspect exact quotes
+in `verification_snapshot.results[].citations`. This is an evidence adequacy heuristic,
+**not the probability that the proposition is true**. A well-evidenced contradiction
+can receive the same score as equally strong support.
+
+Version `evidence-confidence-v1` scores mapping resolution, retrieved-passage coverage,
+lexical relevance, useful dependence groups and agreement at 20 points each.
+Unknown quality/independence/temporal adequacy caps the score at 75; one decisive group
+or conflict caps it at 50; unresolved selected mappings or incomplete retrieval caps
+it at 25; no decisive evidence gives zero. Suspected copies share a group and cannot
+outvote contradictory evidence. No publisher reputation or political bias is scored.
+Unverified directness/primary-source annotations do not earn bonuses. These weights
+and caps are provisional and need human evaluation; they are not calibrated statistics.
+See [the full scoring contract](docs/milestone-9.md).
+
+No new key or environment setting is needed. After checking out this implementation:
+
+```sh
+docker compose up --build -d --force-recreate
+```
+
+Open http://localhost:8000/docs. For local automated verification from the repo root:
+
+```sh
+python -m pip install -e './backend[dev]'
+python -m pytest backend/tests -q
+```
+
+FFmpeg/FFprobe are required for media integration tests. The opt-in real ASR test
+requires the transcription extras and its speech fixture; CI supplies both. M9 tests
+make no external model calls. Terminal runs are immutable and store the source
+snapshot/hash, algorithm version, parameters and timestamps. Known M7/M8 versions are
+replayed before scoring; changed lineage is rejected with HTTP 409. Local JSON and
+synchronous per-process admission remain development limitations. M10 is the dashboard.

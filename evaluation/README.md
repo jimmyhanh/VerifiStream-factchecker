@@ -31,3 +31,7 @@ real-world source provenance accuracy.
 
 M8: `verification/` evaluates twelve preclassified authored policy fixtures. These
 measure deterministic status-rule agreement only, not full-pipeline factual accuracy.
+
+M9 adds `confidence/cases.json`: ten authored score-policy regressions exercised by
+`backend/tests/test_confidence.py`. These validate arithmetic and caps, not factual
+accuracy or confidence calibration. See its README for the held-out evaluation plan.

@@ -309,3 +309,41 @@ real-media pipeline checks passed. M8 API persistence, statuses and citations ar
 covered by the automated suite, not a credentialed live accuracy test.
 [Draft PR #9](https://github.com/jimmyhanh/VerifiStream-factchecker/pull/9) targets
 main. No merge performed. The following docs-only commit records these results.
+
+## Milestone 9 — October 28, 2026
+
+- [x] Inspect merged M8 PR #9 and main `ded699b129b8a88ead46a54759cde869824a70e4`.
+- [x] Write the scoring contract and implementation plan in `milestone-9.md` before code.
+- [x] Implement separate typed confidence algorithm/repository/service interfaces.
+- [x] Add versioned component scores, conservative caps, unknown signals and scope.
+- [x] Group suspected copies; preserve conflict; never score political bias or truth probability.
+- [x] Replay M7/M8 lineage; reject changed records and unsupported policy versions.
+- [x] Add immutable snapshot/hash histories and POST/list/get confidence-run APIs.
+- [x] Add 26 automated tests, including ten exact authored policy regression cases.
+- [x] Run full local suite: **276 passed, 1 optional real-ASR skip**, 9.66 seconds.
+- [x] Real Uvicorn HTTP health returned 200; M9 OpenAPI routes verified.
+- [x] Update README, architecture, roadmap and evaluation guidance.
+- [x] Observe CI and container validation on the published implementation commit.
+- [ ] User exercises a score run on their own completed M8 verification.
+- [ ] Held-out human evaluation/calibration (not claimed by these synthetic tests).
+
+Local suite includes real FFmpeg integration. One upstream Starlette/httpx deprecation
+warning remains. No new dependency, environment setting or external model call was
+introduced. Docker is unavailable in the local authoring environment; CI is the
+container validation gate. Score weights/caps are provisional; unknown quality,
+independence and temporal adequacy cap v1 at 75. M8 statuses remain unchanged.
+Next milestone: M10 frontend dashboard; live input remains M12.
+
+### M9 observed CI validation
+
+Implementation commit: `ba3f7df4969e3625286c08f8838013d870305e56`.
+Implementation tree: `d8f1bc839e1b6d7be747309791ef569cb2fc29aa`.
+[CI run 40775966145](https://github.com/jimmyhanh/VerifiStream-factchecker/actions/runs/40775966145):
+**277 passed in 11.65 seconds**, zero failures/skips, including the real-ASR test.
+Both test job 123125218581 and container job 123125218257 completed successfully.
+Docker built/started, real generated video upload and speech transcription passed,
+and existing claim/decomposition container smoke checks passed. M9 API behavior is
+covered by the automated fixture suite; no paid-provider end-to-end semantic
+accuracy or calibration is claimed. Real HTTP health returned 200 in CI.
+[Draft PR #10](https://github.com/jimmyhanh/VerifiStream-factchecker/pull/10).
+This validation-record update changes documentation only after the tested commit.

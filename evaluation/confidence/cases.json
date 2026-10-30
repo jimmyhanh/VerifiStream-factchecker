@@ -1,0 +1,106 @@
+[
+  {
+    "id": "support",
+    "labels": [
+      "SUPPORTS"
+    ],
+    "expected_score": 50,
+    "agreement": 1,
+    "raw_score": 84.6666666667
+  },
+  {
+    "id": "contradiction",
+    "labels": [
+      "CONTRADICTS"
+    ],
+    "expected_score": 50,
+    "agreement": 1,
+    "raw_score": 84.6666666667
+  },
+  {
+    "id": "qualification",
+    "labels": [
+      "QUALIFIES"
+    ],
+    "expected_score": 50,
+    "agreement": 1,
+    "raw_score": 84.6666666667
+  },
+  {
+    "id": "no-decisive",
+    "labels": [
+      "CONTEXT",
+      "IRRELEVANT"
+    ],
+    "expected_score": 0,
+    "agreement": 0,
+    "raw_score": 40
+  },
+  {
+    "id": "conflict",
+    "labels": [
+      "SUPPORTS",
+      "CONTRADICTS"
+    ],
+    "expected_score": 50,
+    "agreement": 0,
+    "raw_score": 70.3333333333
+  },
+  {
+    "id": "failed",
+    "labels": [
+      "SUPPORTS",
+      "failed"
+    ],
+    "expected_score": 25,
+    "agreement": 1,
+    "raw_score": 64.6666666667
+  },
+  {
+    "id": "review",
+    "labels": [
+      "SUPPORTS",
+      "needs_review"
+    ],
+    "expected_score": 25,
+    "agreement": 1,
+    "raw_score": 64.6666666667
+  },
+  {
+    "id": "repetition-conflict",
+    "labels": [
+      "SUPPORTS",
+      "SUPPORTS",
+      "SUPPORTS",
+      "SUPPORTS",
+      "SUPPORTS",
+      "SUPPORTS",
+      "SUPPORTS",
+      "SUPPORTS",
+      "CONTRADICTS"
+    ],
+    "expected_score": 50,
+    "agreement": 0,
+    "raw_score": 70
+  },
+  {
+    "id": "three-groups",
+    "labels": [
+      "SUPPORTS",
+      "SUPPORTS",
+      "SUPPORTS"
+    ],
+    "expected_score": 75,
+    "agreement": 1,
+    "raw_score": 96
+  },
+  {
+    "id": "no-mapped",
+    "labels": [
+      "needs_review"
+    ],
+    "expected_score": 0,
+    "agreement": 0,
+    "raw_score": 0
+  }
+]
