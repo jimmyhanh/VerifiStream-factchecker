@@ -1,7 +1,7 @@
 name: Backend tests
 on:
   push:
-    branches: [main, milestone-1-video-ingestion, milestone-2-transcription, milestone-3-claim-detection, milestone-4-atomic-propositions, milestone-5-evidence-retrieval, milestone-6-evidence-mapping, milestone-7-evidence-ranking, milestone-8-evidence-verification, milestone-9-evidence-confidence]
+    branches: [main, milestone-1-video-ingestion, milestone-2-transcription, milestone-3-claim-detection, milestone-4-atomic-propositions, milestone-5-evidence-retrieval, milestone-6-evidence-mapping, milestone-7-evidence-ranking, milestone-8-evidence-verification, milestone-9-evidence-confidence, milestone-10-dashboard]
   pull_request:
   workflow_dispatch:
 permissions:
@@ -98,6 +98,15 @@ jobs:
       - uses: actions/checkout@v4
       - name: Build and start development container
         run: docker compose up --build -d
+      - name: Check dashboard through container
+        run: |
+          for attempt in {1..30}; do
+            if curl --fail --silent http://127.0.0.1:3000 > /tmp/dashboard.html; then
+              break
+            fi
+            sleep 1
+          done
+          python -c 'from pathlib import Path; assert "Make every claim inspectable" in Path("/tmp/dashboard.html").read_text()'
       - name: Check health and real upload through container
         run: |
           for attempt in {1..30}; do
@@ -159,3 +168,42 @@ jobs:
         run: |
           docker compose logs
           docker compose down -v
+
+  frontend:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install backend fixture dependencies
+        run: python -m pip install -e './backend[dev]'
+      - name: Install frontend dependencies
+        working-directory: frontend
+        run: npm ci --no-audit --no-fund
+      - name: Build frontend
+        working-directory: frontend
+        run: npm run build
+      - name: Type check frontend
+        working-directory: frontend
+        run: npm run typecheck
+      - name: Install test browser
+        working-directory: frontend
+        run: npx playwright install --with-deps chromium
+      - name: Browser workflow tests with synthetic providers
+        working-directory: frontend
+        run: npm test
+      - name: Save browser reports and screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: dashboard-browser-tests
+          path: |
+            frontend/playwright-report/
+            frontend/test-results/

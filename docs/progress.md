@@ -347,3 +347,27 @@ covered by the automated fixture suite; no paid-provider end-to-end semantic
 accuracy or calibration is claimed. Real HTTP health returned 200 in CI.
 [Draft PR #10](https://github.com/jimmyhanh/VerifiStream-factchecker/pull/10).
 This validation-record update changes documentation only after the tested commit.
+
+
+## Milestone 10 — October 30, 2026
+
+- [x] Inspect merged M9/main `80ea0348506b970f53b21aa1ffd1340e8a371567`.
+- [x] Write dashboard architecture and implementation plan before code.
+- [x] Add Next.js/React/TypeScript workspace and locked dependency versions.
+- [x] Connect upload, transcript, claim selection, decomposition and evidence retrieval.
+- [x] Connect passage mapping, source grouping, verification and confidence inspection.
+- [x] Show exact citations, limitations, unknown metadata, errors and component/cap details.
+- [x] Implement saved video library and exact-ancestry history selection without UUID copying.
+- [x] Add paginated video API, safe public configuration and explicit CORS origins.
+- [x] Add frontend Docker service, development configuration, tests and CI browser job.
+- [x] Local backend suite: 280 passed, 1 optional real-ASR skip, 19.78 seconds.
+- [x] Production frontend build and TypeScript checks pass locally.
+- [x] Synthetic full API test pipeline reaches completed confidence (50) using real services/storage.
+- [ ] Observe CI browser tests and Docker checks; record tested commit and results.
+- [ ] User rehearses a short real-video workflow with their configured providers.
+
+One upstream Starlette/httpx warning remains. The managed preview CLI appends Vite
+flags (`--host`/`--strictPort`) that Next.js rejects; local visual/browser preview
+was unavailable. Standard-server Playwright checks run in CI instead. No local
+browser screenshots or live-provider semantic accuracy are claimed.
+No authentication, video playback, durable jobs or streaming is added in M10.

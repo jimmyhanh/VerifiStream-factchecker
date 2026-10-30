@@ -75,3 +75,13 @@ breakdowns, conservative caps, immutable run APIs, and authored policy regressio
 cases. The score is explicitly uncalibrated; source quality, temporal adequacy and
 independence are unknown. Human-held-out calibration remains open. M10 dashboard is
 next, followed by the November 8–13 integration, evaluation and demonstration gates.
+
+
+## October 30 — M10 dashboard implementation
+
+M9 PR #10 is merged. M10 introduces the local Next.js dashboard for upload, transcript,
+claim/proposition selection, evidence retrieval/mapping, statuses, citations and
+confidence inspection. Browser tests and Docker validation are acceptance gates.
+Preserve the November 8–13 integration/evaluation/freeze window; user testing with
+real short videos and configured providers remains essential. M11 jobs/caching and
+M12 live input remain separate milestones.

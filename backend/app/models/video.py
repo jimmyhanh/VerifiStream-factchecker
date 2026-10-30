@@ -34,3 +34,8 @@ class VideoRecord(BaseModel):
 class HealthResponse(BaseModel):
     status: str = "ok"
     version: str = "0.1.0"
+
+
+class PublicConfiguration(BaseModel):
+    max_video_bytes: int
+    max_duration_seconds: int

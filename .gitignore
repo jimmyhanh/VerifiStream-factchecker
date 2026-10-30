@@ -8,3 +8,11 @@ storage/*
 !storage/.gitkeep
 backend/storage/
 backend/test-results.xml
+node_modules/
+.next/
+*.tsbuildinfo
+frontend/.env*
+!frontend/.env.example
+frontend/playwright-report/
+frontend/test-results/
+frontend/tests/generated/

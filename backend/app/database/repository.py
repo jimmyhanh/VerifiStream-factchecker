@@ -6,6 +6,7 @@ from app.models.video import VideoRecord
 class VideoRepository(Protocol):
     def save(self, record: VideoRecord) -> None: ...
     def get(self, video_id: UUID) -> VideoRecord | None: ...
+    def list(self, limit: int, offset: int) -> list[VideoRecord]: ...
 
 class JsonVideoRepository:
     """Single-host development adapter; replace with PostgreSQL for durable jobs."""
@@ -28,3 +29,9 @@ class JsonVideoRepository:
             return VideoRecord.model_validate_json(path.read_text(encoding="utf-8"))
         except FileNotFoundError:
             return None
+
+    def list(self, limit: int, offset: int) -> list[VideoRecord]:
+        records = [VideoRecord.model_validate_json(path.read_text(encoding="utf-8"))
+                   for path in self.root.glob("*/metadata.json")]
+        records.sort(key=lambda item: (item.created_at, str(item.id)), reverse=True)
+        return records[offset:offset + limit]
