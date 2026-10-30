@@ -47,3 +47,39 @@ browser flows with explicit synthetic fixtures from the actual backend adapters.
 Test selection limits, network/failed-run errors, history ancestry, confidence/citation
 rendering and mobile layout. CI builds Compose and checks the dashboard. Live paid
 provider accuracy and production scaling are outside M10; no public deployment.
+
+
+## Observed validation — October 30, 2026
+
+Implementation `face635d35d800b2448eedb3c60693af22a9c42c` passed
+[CI run 41125543529](https://github.com/jimmyhanh/VerifiStream-factchecker/actions/runs/41125543529):
+281 backend tests (16.17 seconds), 10 frontend checks (9.5 seconds), production
+Next build/TypeScript, Docker build/start for both services, dashboard HTTP content
+and existing real-media/transcription/claim/decomposition container checks.
+Desktop/mobile screenshots and reports are saved in `dashboard-browser-tests`.
+
+Local backend results were 280 passed with one opt-in real-ASR skip. Managed local
+preview supplied incompatible Vite flags to Next.js, so local browser/manual visual
+review was unavailable; standard-server Chromium workflow checks passed in CI.
+All browser provider inputs are explicitly synthetic; real provider accuracy and
+confidence calibration are not measured by these tests.
+
+## Run and acceptance rehearsal
+
+```sh
+git fetch origin
+git switch milestone-10-dashboard
+git pull
+docker compose up --build -d --force-recreate
+```
+
+Open http://localhost:3000. Preserve existing `.env` provider values and the `media`
+volume. The dashboard adds no AI key. Upload a short English video, transcribe,
+select candidates/propositions, retrieve and select passages, map, rank, verify,
+and calculate confidence. Reopen the saved video and inspect an older run to rehearse
+history handling. Manual HTTPS source URLs can be used without Brave search.
+
+Remaining limits: local unauthenticated single-user use, synchronous requests,
+full nested run histories, JSON metadata scans, no player/seeking, no editing of
+heuristic propositions or custom ranking annotations. Real-video provider rehearsal
+is still needed. M11 jobs/caching and M12 live input are not included.
