@@ -166,7 +166,7 @@ test("201 failed run is not presented as successful transcription", async ({
   await page
     .getByRole("button", { name: "Transcribe video", exact: true })
     .click();
-  await expect(page.getByRole("alert")).toContainText(
+  await expect(page.locator(".notice[role=alert]")).toContainText(
     "Transcription timed out.",
   );
   await expect(
@@ -180,7 +180,7 @@ test("manual URL validation and network failure do not silently retry mutations"
   await page.getByLabel("Evidence discovery").selectOption("manual_urls");
   await page.getByLabel("Source URLs 1").fill("http://insecure.example/report");
   await page.getByRole("button", { name: /Retrieve evidence/ }).click();
-  await expect(page.getByRole("alert")).toContainText("HTTPS");
+  await expect(page.locator(".notice[role=alert]")).toContainText("HTTPS");
   await page.getByLabel("Source URLs 1").fill("https://example.org/report");
   let calls = 0;
   await page.route("**/retrievals", async (route) => {
@@ -190,7 +190,7 @@ test("manual URL validation and network failure do not silently retry mutations"
     } else await route.continue();
   });
   await page.getByRole("button", { name: /Retrieve evidence/ }).click();
-  await expect(page.getByRole("alert")).toContainText("may still be running");
+  await expect(page.locator(".notice[role=alert]")).toContainText("may still be running");
   expect(calls).toBe(1);
   await expect(
     page.getByRole("button", { name: /Retrieve evidence/ }),
