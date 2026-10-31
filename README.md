@@ -1,11 +1,11 @@
 # VerifiStream — evidence-based fact checker
 
-Semester project, September–December 2026. **Milestones 1–9:** uploaded video,
+Semester project, September–December 2026. **Milestones 1–10:** uploaded video,
 audio extraction, timestamped transcription, experimental English claim detection,
 atomic decomposition, evidence retrieval, relationship mapping, source dependence
 ranking, evidence-based statuses, and a separate experimental Evidence Confidence
-score. The score is uncalibrated and is not a probability of truth. The frontend
-is next (M10); the current interface is the API documentation.
+score, and a Next.js dashboard. The score is uncalibrated and is not a probability
+of truth. Use the dashboard at http://localhost:3000 or the API at http://localhost:8000/docs.
 
 ## Run with Docker (recommended)
 Install Docker with Compose, then run from the repository root:
@@ -17,7 +17,8 @@ git checkout main
 docker compose up --build
 ```
 
-Open http://localhost:8000/docs for the interactive upload API.
+Open **http://localhost:3000** for the dashboard.
+The interactive API remains at http://localhost:8000/docs.
 Health: http://localhost:8000/health.
 Compose stores media in a named volume and binds the API to localhost.
 To override limits, copy .env.example to .env and edit values before starting.
@@ -889,3 +890,87 @@ make no external model calls. Terminal runs are immutable and store the source
 snapshot/hash, algorithm version, parameters and timestamps. Known M7/M8 versions are
 replayed before scoring; changed lineage is rejected with HTTP 409. Local JSON and
 synchronous per-process admission remain development limitations. M10 is the dashboard.
+
+
+## Milestone 10: dashboard
+
+From this branch (or main after merging its PR), run:
+
+```sh
+docker compose up --build -d --force-recreate
+```
+
+Open **http://localhost:3000**. Existing videos in the Compose `media` volume appear
+in the sidebar. Do not run `docker compose down -v` if you want to retain them.
+No additional AI key is needed for the frontend. Keep the existing `OPENAI_API_KEY`,
+`MAPPING_MODEL`, and `BRAVE_SEARCH_API_KEY` values in the backend/root `.env`.
+
+1. **Upload:** choose a supported file, then Upload & extract audio. Wait for completion.
+2. **Transcript:** Transcribe video; inspect timestamped text, then Detect check-worthy claims.
+3. **Claims:** select candidates and Decompose selected claims. Select 1–3 atomic
+   propositions, supply missing context, and choose Brave search or your HTTPS URLs.
+4. **Evidence:** review passages and retrieval errors. Select 1–12 passages and Map
+   selected evidence. This step calls the configured external model and can incur cost.
+   Inspect relationships, then Rank evidence & group sources.
+5. **Findings:** Verify selected evidence, then Calculate Evidence Confidence.
+   Expand source provenance, assessment limitations and score components. Download
+   the selected run JSON when you need its complete reproducibility snapshot.
+
+The app carries UUIDs for you. Click a saved video to resume; the selected video's
+URL also survives a page reload. Stage history selectors restore matching parent
+runs and clear later stages. An older confidence run never attaches to a newer
+verification. Histories include failures and processing records; HTTP 201 alone
+is not treated as success. If a connection drops, use **Refresh saved runs** before
+submitting again. There is no automatic retry, cancellation, durable job recovery,
+percentage progress or live video processing in this milestone.
+
+### Frontend development without Docker
+
+Use Node.js 24 and npm. Start the backend using the local setup instructions above.
+In a second terminal, from the repository root:
+
+```sh
+cd frontend
+npm ci
+npm run dev
+```
+
+Open http://localhost:3000. For a different backend address, copy
+`frontend/.env.example` to `frontend/.env.local` and edit
+`NEXT_PUBLIC_API_BASE_URL`. This browser-visible variable must **never contain a key**.
+For Docker, set it in the root `.env`, then rebuild the frontend; it is embedded at
+build time. The address is resolved by your browser, so `http://backend:8000` is not
+an appropriate browser address. Exact allowed browser origins are configured on the
+backend with `CORS_ORIGINS` (comma-separated); defaults include localhost and
+127.0.0.1 on port 3000. Backend keys remain server-side.
+
+Both Compose services bind to loopback. This remains a local, unauthenticated
+single-user development system. CORS is not authentication. Run history loads full
+snapshots, and the JSON video listing scans metadata; large histories and
+multi-user production deployment require further work in M11.
+
+### Dashboard tests
+
+Install backend development dependencies and frontend dependencies first. With
+ports 3000/8000 free, run from `frontend/`:
+
+```sh
+npm run build
+npm run typecheck
+npx playwright install chromium
+npm test
+```
+
+On Linux, browser system dependencies may require `npx playwright install --with-deps chromium`.
+The test runner starts a temporary synthetic backend and the production frontend.
+Media, ASR, search, fetch and mapping providers are test substitutes; HTTP, storage,
+claim/decomposition rules, ranking, verification and confidence are production code.
+Nothing is written into your development media volume and no paid model calls occur.
+The `python` command must resolve to the environment with backend dev dependencies;
+optionally set `PYTHON` to its interpreter path. CI runs the browser tests, saves
+screenshots/reports, and builds both Docker services.
+
+The dashboard does not yet include video playback/seeking, authentication, editing
+heuristic propositions, custom ranking annotations, live input or background jobs.
+The full source snapshots and detailed metadata remain available in exported JSON.
+See [Milestone 10](docs/milestone-10.md) for the scope and validation record.

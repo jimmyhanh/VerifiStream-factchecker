@@ -1,12 +1,13 @@
 from uuid import UUID
-from fastapi import FastAPI, Request
+from fastapi import FastAPI, Request, Query
+from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from starlette.concurrency import run_in_threadpool
 from starlette.datastructures import UploadFile
 from app.api.limits import UploadLimits
 from app.database.repository import JsonVideoRepository, VideoRepository
 from app.media.ffmpeg import FFmpegProcessor, MediaProcessor
-from app.models.video import HealthResponse, VideoRecord
+from app.models.video import HealthResponse, VideoRecord, PublicConfiguration
 from app.shared.config import Settings
 from app.shared.errors import ServiceError
 from app.storage.local import LocalVideoStorage, VideoStorage
@@ -126,6 +127,10 @@ def create_app(
         slots=config.max_concurrent_uploads,
     )
 
+    app.add_middleware(CORSMiddleware, allow_origins=config.cors_origins,
+                       allow_methods=["GET", "POST"], allow_headers=["Content-Type"],
+                       allow_credentials=False)
+
     @app.exception_handler(ServiceError)
     async def service_error(request: Request, exc: ServiceError) -> JSONResponse:
         return JSONResponse(
@@ -144,6 +149,16 @@ def create_app(
     def health() -> HealthResponse:
         """Liveness only; does not guarantee storage/media-tool readiness."""
         return HealthResponse()
+
+    @app.get("/configuration", response_model=PublicConfiguration)
+    def public_configuration() -> PublicConfiguration:
+        return PublicConfiguration(max_video_bytes=config.max_video_bytes,
+                                   max_duration_seconds=config.max_duration_seconds)
+
+    @app.get("/videos", response_model=list[VideoRecord])
+    def list_videos(limit: int = Query(default=50, ge=1, le=100),
+                    offset: int = Query(default=0, ge=0)) -> list[VideoRecord]:
+        return video_repository.list(limit, offset)
 
     @app.post(
         "/videos", response_model=VideoRecord, status_code=201,

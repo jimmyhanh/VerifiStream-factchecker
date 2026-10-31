@@ -347,3 +347,50 @@ covered by the automated fixture suite; no paid-provider end-to-end semantic
 accuracy or calibration is claimed. Real HTTP health returned 200 in CI.
 [Draft PR #10](https://github.com/jimmyhanh/VerifiStream-factchecker/pull/10).
 This validation-record update changes documentation only after the tested commit.
+
+
+## Milestone 10 — October 30, 2026
+
+- [x] Inspect merged M9/main `80ea0348506b970f53b21aa1ffd1340e8a371567`.
+- [x] Write dashboard architecture and implementation plan before code.
+- [x] Add Next.js/React/TypeScript workspace and locked dependency versions.
+- [x] Connect upload, transcript, claim selection, decomposition and evidence retrieval.
+- [x] Connect passage mapping, source grouping, verification and confidence inspection.
+- [x] Show exact citations, limitations, unknown metadata, errors and component/cap details.
+- [x] Implement saved video library and exact-ancestry history selection without UUID copying.
+- [x] Add paginated video API, safe public configuration and explicit CORS origins.
+- [x] Add frontend Docker service, development configuration, tests and CI browser job.
+- [x] Local backend suite: 280 passed, 1 optional real-ASR skip, 19.78 seconds.
+- [x] Production frontend build and TypeScript checks pass locally.
+- [x] Synthetic full API test pipeline reaches completed confidence (50) using real services/storage.
+- [x] Observe CI browser tests and Docker checks; record tested commit and results.
+- [ ] User rehearses a short real-video workflow with their configured providers.
+
+One upstream Starlette/httpx warning remains. The managed preview CLI appends Vite
+flags (`--host`/`--strictPort`) that Next.js rejects; local visual/browser preview
+was unavailable. Standard-server Playwright checks run in CI instead. No local
+browser screenshots or live-provider semantic accuracy are claimed.
+No authentication, video playback, durable jobs or streaming is added in M10.
+
+
+### M10 observed CI validation
+
+Tested implementation commit: `face635d35d800b2448eedb3c60693af22a9c42c`.
+Tree: `7a32cd18ce3b793f7c7fda7ed774bd194f33a47b`.
+[CI run 41125543529](https://github.com/jimmyhanh/VerifiStream-factchecker/actions/runs/41125543529):
+- Backend: **281 passed in 16.17 seconds**, no failures/skips, including real ASR.
+- Frontend: production build/type checks pass; **10 Playwright checks passed in
+  9.5 seconds** (eight browser scenarios and two helper-contract checks).
+- Container: both images built and started; dashboard HTTP content, real video
+  upload, speech transcription, and existing claim/decomposition smoke checks pass.
+- Browser scenarios cover the complete pipeline, citations/export/reload, exact
+  history restoration, failed-run handling, URL/network errors without silent retries,
+  mobile width, unsafe-link/text escaping and 3-proposition/12-passage caps.
+- CI artifact `dashboard-browser-tests` contains reports and desktop/mobile screenshots.
+
+The initial browser run found two ambiguous test alert selectors (Next's route
+announcer also has role=alert); they were narrowed to application notices and the
+complete suite passed. No claim of human visual review of screenshots is made.
+[Draft PR #11](https://github.com/jimmyhanh/VerifiStream-factchecker/pull/11).
+This validation record is a documentation-only update after the tested implementation.
+Next: user rehearsal, then M11 background jobs/caching/scalability; live input is M12.

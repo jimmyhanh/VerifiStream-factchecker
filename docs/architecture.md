@@ -217,3 +217,30 @@ separate repository interface and immutable terminal JSON records. CPU-only scor
 is synchronous with per-process admission; there is no cross-process coordination,
 authentication or production database migration in M9. These boundaries allow a
 future worker/repository adapter without moving scoring logic into the API.
+
+
+## M10 dashboard boundary
+
+`frontend/` is a Next.js App Router application using React and strict TypeScript.
+Shared API/history functions separate network calls and exact ancestry selection
+from the workspace and evidence/score presentation components. Inputs and source
+text render as text, citation links are restricted to HTTP(S) without credentials,
+and status labels do not rely on color alone. There are no fabricated production
+results. Provider substitutes exist only in browser-test support files.
+
+The browser talks directly to FastAPI; uploads are not buffered through a Next.js
+proxy. `NEXT_PUBLIC_API_BASE_URL` is a build-time public address, not a secret.
+FastAPI uses an explicit `CORS_ORIGINS` allowlist, GET/POST and Content-Type only,
+without credentialed requests. This is not an authentication mechanism.
+`GET /videos?limit=20&offset=0` provides a paginated response via VideoRepository;
+its JSON adapter still scans metadata. `GET /configuration` exposes only the two
+upload limits through a Pydantic schema, never backend secrets.
+
+Stage selectors resolve exact parent run IDs across saved histories and discard
+incompatible downstream state. Mutations are single-flight with no automatic retries.
+Operation-level pending indicators report ongoing requests, not job queue progress.
+Full histories are loaded for one video; expensive nested snapshots and list scans
+remain development constraints. M11 can introduce summary queries, pagination of
+run histories, durable jobs and indexed storage without moving scoring or evidence
+logic into the browser. The frontend Docker image uses standalone Next output,
+locked npm dependencies and a non-root runtime user; both service ports stay local.

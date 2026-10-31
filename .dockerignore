@@ -4,3 +4,7 @@
 storage
 **/__pycache__
 **/.pytest_cache
+**/node_modules
+**/.next
+**/test-results
+**/playwright-report
