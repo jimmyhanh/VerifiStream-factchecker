@@ -974,3 +974,37 @@ The dashboard does not yet include video playback/seeking, authentication, editi
 heuristic propositions, custom ranking annotations, live input or background jobs.
 The full source snapshots and detailed metadata remain available in exported JSON.
 See [Milestone 10](docs/milestone-10.md) for the scope and validation record.
+
+## Review complex claims and manage uploaded videos
+
+If automatic decomposition says **needs review**, open the Claims tab and click
+**Review this statement**, or select candidates and choose **Review selected manually**.
+Edit/split the propositions while preserving the speaker, conditions, negation, dates,
+and quantities. Keep **Needs search context** checked when the subject/time/place is
+unclear. Check the meaning-preservation acknowledgement and click **Approve & enable
+search**. Then select the new atomic propositions and retrieve evidence; provide any
+required search context. Approval makes a proposition searchable, not verified.
+Original transcripts and old runs are retained unchanged.
+
+Optional **Suggest with AI** creates editable, unverified drafts. Configure
+`OPENAI_API_KEY` and `DECOMPOSITION_MODEL` in your local `.env`; an empty decomposition
+model falls back to `MAPPING_MODEL`. Use a model available to your account that supports
+Chat Completions structured outputs. Selected quotations are sent to that provider only
+when requested. Manual review needs no AI credentials. Brave search still requires
+`BRAVE_SEARCH_API_KEY`; manual evidence URLs remain an alternative.
+
+After updating the code or environment, rebuild from the repository root:
+
+```powershell
+docker compose up --build -d
+```
+
+Open http://localhost:3000. **Delete this video** removes the selected video's original,
+audio, transcripts, evidence and all saved runs. **Clear all videos** in the sidebar
+removes every uploaded video and its runs. Both require browser confirmation and keep
+downloaded transcription models. Finish active processing before deletion. If disk
+cleanup is incomplete, the dashboard reports it; fix storage permissions and retry clear.
+Deletion has no undo. The app remains a local, single-process development system without
+user authentication; do not expose these endpoints publicly.
+
+See [review and deletion design](docs/review-and-deletion.md) for limits and API details.

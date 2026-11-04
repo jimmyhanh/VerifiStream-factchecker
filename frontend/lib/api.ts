@@ -4,11 +4,12 @@ export const API_BASE = (
 export async function api<T>(
   path: string,
   body?: object | FormData,
+  method?: "GET" | "POST" | "DELETE",
 ): Promise<T> {
   let response: Response;
   try {
     response = await fetch(`${API_BASE}${path}`, {
-      method: body === undefined ? "GET" : "POST",
+      method: method || (body === undefined ? "GET" : "POST"),
       cache: "no-store",
       credentials: "omit",
       headers:

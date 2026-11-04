@@ -16,6 +16,7 @@ import {
 import { newestSelection, selectHistory } from "@/lib/history";
 import { Badge, Empty, RunHistory, RunNotice, SourceLink } from "./Shared";
 import Findings from "./Findings";
+import ReviewPanel from "./ReviewPanel";
 const tabs = ["Upload", "Transcript", "Claims", "Evidence", "Findings"];
 const stageTab: Record<Stage, number> = {
   transcript: 1,
@@ -45,6 +46,7 @@ export default function Dashboard() {
   const [contexts, setContexts] = useState<Record<string, string>>({}),
     [urls, setUrls] = useState<Record<string, string>>({});
   const [mode, setMode] = useState<"search" | "manual_urls">("search");
+  const [reviewTarget, setReviewTarget] = useState<string[]>([]);
   const locked = useRef(false);
   const propositions =
     selected.atoms?.results.flatMap((r) => r.propositions) || [];
@@ -69,6 +71,7 @@ export default function Dashboard() {
     }
   }
   function clearChoices() {
+    setReviewTarget([]);
     setCandidateIds([]);
     setPropositionIds([]);
     setPassageIds([]);
@@ -242,6 +245,73 @@ export default function Dashboard() {
     }
     await create("retrieval", input);
   }
+  function reviewed(run: Runs["atoms"]) {
+    const next = { ...history, atoms: [run, ...history.atoms] };
+    setHistory(next);
+    setSelected(selectHistory(next, "atoms", run));
+    clearChoices();
+    setMessage(
+      "Reviewed propositions saved. Select them under Atomic propositions to retrieve evidence.",
+    );
+  }
+  function resetVideo() {
+    setVideo(undefined);
+    setSelected({});
+    setHistory(emptyHistory());
+    clearChoices();
+    setTab(0);
+    window.history.replaceState(null, "", "/");
+  }
+  async function deleteVideo() {
+    if (
+      !video ||
+      !window.confirm(
+        `Permanently delete "${video.original_filename}" and all its media, transcripts, evidence and saved runs? This cannot be undone.`,
+      )
+    )
+      return;
+    try {
+      const result = await api<{ pending_cleanup: boolean }>(
+        `/videos/${video.id}`,
+        undefined,
+        "DELETE",
+      );
+      setMessage(
+        result.pending_cleanup
+          ? "Removed from the library, but disk cleanup is incomplete. Clear all videos can retry pending cleanup."
+          : "Video and its associated runs deleted.",
+      );
+    } finally {
+      resetVideo();
+      await library();
+    }
+  }
+  async function clearVideos() {
+    const preview = await api<{ video_ids: string[]; count: number }>(
+      "/videos/deletion-preview",
+    );
+    if (
+      !window.confirm(
+        `Permanently delete ALL ${preview.count} uploaded videos and their media, transcripts, evidence and saved runs? Downloaded transcription models are kept. This cannot be undone.`,
+      )
+    )
+      return;
+    try {
+      const result = await api<{ pending_cleanup: boolean }>(
+        "/videos",
+        { confirmation: "DELETE_ALL_VIDEOS", video_ids: preview.video_ids },
+        "DELETE",
+      );
+      setMessage(
+        result.pending_cleanup
+          ? "Library cleared, but some disk cleanup remains incomplete. Check storage permissions and retry clear."
+          : "All uploaded videos and their associated runs cleared.",
+      );
+    } finally {
+      resetVideo();
+      await library();
+    }
+  }
   function download() {
     const run = stages
       .map((s) => selected[s])
@@ -336,6 +406,15 @@ export default function Dashboard() {
             Load more videos
           </button>
         )}
+        <button
+          className="text-button danger-link"
+          disabled={!!busy}
+          onClick={() =>
+            void work("Preparing to clear uploaded videos…", clearVideos)
+          }
+        >
+          Clear all videos
+        </button>
         <div className="sidebar-footer">
           <span className="live-dot" /> Uploaded-video workflow
           <small>Live checking is planned for a later milestone.</small>
@@ -353,6 +432,17 @@ export default function Dashboard() {
           </div>
           <div className="row">
             <span className="local-label">LOCAL DEVELOPMENT</span>
+            {video && (
+              <button
+                className="secondary danger"
+                disabled={!!busy}
+                onClick={() =>
+                  void work("Preparing video deletion…", deleteVideo)
+                }
+              >
+                Delete this video
+              </button>
+            )}
             {video && (
               <button
                 className="secondary"
@@ -620,8 +710,25 @@ export default function Dashboard() {
                   </Empty>
                 )}
               </section>
+              {selected.claims && (
+                <ReviewPanel
+                  key={selected.claims.id}
+                  claim={selected.claims}
+                  selectedIds={candidateIds}
+                  targetIds={reviewTarget}
+                  work={work}
+                  onApproved={reviewed}
+                />
+              )}
               <section className="panel">
                 <h2>Atomic propositions</h2>
+                {selected.atoms?.provider?.name ===
+                  "user-reviewed-propositions" && (
+                  <p className="notice">
+                    User-reviewed interpretations. The original source is
+                    retained; human approval does not establish factual truth.
+                  </p>
+                )}
                 {runControl("atoms", "Decomposition")}
                 {selected.atoms?.results.map((r) => (
                   <div className="atomic-parent" key={r.parent_candidate_id}>
@@ -630,6 +737,26 @@ export default function Dashboard() {
                       <p className="notice">
                         <Badge text="needs_review" /> {r.review_reason}
                       </p>
+                    )}
+                    {r.status === "needs_review" && (
+                      <button
+                        className="secondary"
+                        onClick={() => {
+                          setReviewTarget([r.parent_candidate_id]);
+                          setTimeout(
+                            () =>
+                              document
+                                .querySelector(".review-panel")
+                                ?.scrollIntoView({
+                                  behavior: "auto",
+                                  block: "start",
+                                }),
+                            0,
+                          );
+                        }}
+                      >
+                        Review this statement
+                      </button>
                     )}
                     {r.propositions.map((p) => (
                       <label className="select-card" key={p.id}>

@@ -2,7 +2,7 @@ import hashlib
 import shutil
 from pathlib import Path
 from typing import BinaryIO, Protocol
-from uuid import UUID
+from uuid import UUID, uuid4
 from app.shared.errors import ServiceError
 
 class VideoStorage(Protocol):
@@ -10,6 +10,8 @@ class VideoStorage(Protocol):
     def input_path(self, video_id: UUID) -> Path: ...
     def audio_path(self, video_id: UUID) -> Path: ...
     def remove(self, video_id: UUID) -> None: ...
+    def delete(self, video_id: UUID) -> bool: ...
+    def cleanup_deleted(self) -> bool: ...
 
 class LocalVideoStorage:
     def __init__(self, root: Path):
@@ -45,3 +47,32 @@ class LocalVideoStorage:
 
     def remove(self, video_id: UUID) -> None:
         shutil.rmtree(self.root / str(video_id), ignore_errors=True)
+
+
+    def delete(self, video_id: UUID) -> bool:
+        source=self.root / str(video_id)
+        if source.is_symlink():
+            raise OSError('Refuse symlink video directory')
+        trash=self.root / '.deleted'
+        if trash.is_symlink():raise OSError('Refuse symlink deletion directory')
+        trash.mkdir(exist_ok=True)
+        target=trash / str(uuid4())
+        source.rename(target)
+        try:
+            shutil.rmtree(target)
+            return True
+        except OSError:
+            return False
+
+    def cleanup_deleted(self) -> bool:
+        trash=self.root / '.deleted'
+        if trash.is_symlink():raise OSError('Refuse symlink deletion directory')
+        complete=True
+        for target in trash.glob('*'):
+            try:UUID(target.name)
+            except ValueError:continue
+            if target.is_symlink():
+                complete=False;continue
+            try:shutil.rmtree(target)
+            except OSError:complete=False
+        return complete

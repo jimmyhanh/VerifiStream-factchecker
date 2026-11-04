@@ -5,6 +5,7 @@ from pydantic import BaseModel, Field, SecretStr
 
 class Settings(BaseModel):
     openai_api_key: SecretStr = SecretStr('')
+    decomposition_model: str = Field(default='', max_length=200)
     mapping_model: str = Field(default='', max_length=200)
     brave_search_api_key: SecretStr = SecretStr('')
     cors_origins: list[str] = ["http://localhost:3000", "http://127.0.0.1:3000"]
@@ -26,6 +27,7 @@ class Settings(BaseModel):
     def from_env(cls) -> "Settings":
         return cls(
             openai_api_key=os.getenv("OPENAI_API_KEY", ""),
+            decomposition_model=os.getenv("DECOMPOSITION_MODEL", ""),
             mapping_model=os.getenv("MAPPING_MODEL", ""),
             brave_search_api_key=os.getenv("BRAVE_SEARCH_API_KEY", ""),
             cors_origins=[s.strip() for s in os.getenv("CORS_ORIGINS", "http://localhost:3000,http://127.0.0.1:3000").split(",") if s.strip()],

@@ -85,3 +85,9 @@ confidence inspection. Browser tests and Docker validation are acceptance gates.
 Preserve the November 8–13 integration/evaluation/freeze window; user testing with
 real short videos and configured providers remains essential. M11 jobs/caching and
 M12 live input remain separate milestones.
+
+### Follow-up before Milestone 11
+
+Complete reviewable complex-claim decomposition and video-library deletion, then
+validate the uploaded-video demo. Keep the November 13 demo target; background jobs
+and live processing remain separate milestones, not prerequisites for this fix.

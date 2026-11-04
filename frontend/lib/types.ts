@@ -51,6 +51,7 @@ export interface Proposition {
   needs_context: boolean;
 }
 export interface AtomicRun extends BaseRun {
+  provider?: { name: string };
   claim_run_id: string;
   results: {
     parent_candidate_id: string;

@@ -47,7 +47,7 @@ def _span(start: int, end: int) -> TextSpan:
 
 class EnglishRuleDecompositionProvider:
     def info(self) -> ClaimProviderInfo:
-        return ClaimProviderInfo(name='english-atomic-rules', version='english-atomic-v1',
+        return ClaimProviderInfo(name='english-atomic-rules', version='english-atomic-v1.1',
             parameters={'grammar': 'conservative-coordination-v1', 'max_clauses':10,
                         'causal_projection':'positive-policy-quantity-v1', 'language':'en'})
 
@@ -67,8 +67,16 @@ class EnglishRuleDecompositionProvider:
         body = text[start:end]
         if not body or len(text) > 4000:
             return _review('Empty or overlong candidate; inspect the original transcript.')
-        if UNSAFE.search(body) or re.search(r'(?<!\d),|,(?!\d)', body):
-            return _review('Unsupported scope, modality, attribution, subordination or punctuation.')
+        unsupported = UNSAFE.search(body)
+        if unsupported:
+            word = unsupported.group().lower()
+            category = ('Conditional language' if word in ('if','unless','whether') else
+                        'Uncertainty or attributed belief' if word in ('may','might','could','would','should','will','allegedly','reportedly','possibly','probably','suggests','believes','thinks','hopes','wishes') else
+                        'Causal or time-dependent wording' if word in ('because','due to','when','after','before','since','until') else
+                        'Complex wording or punctuation')
+            return _review(f'{category} ("{unsupported.group()}") needs meaning-preserving review. Use Review propositions; this is not an evidence verdict.')
+        if re.search(r'(?<!\d),|,(?!\d)', body):
+            return _review('Conversational commas are outside the automatic grammar. Use Review propositions to preserve the full meaning.')
         if re.search(r'\b(?:said|reported|claimed|according to)\b',body,re.I):
             return _review('Attribution is not in the supported explicit prefix form.')
         # An interior sentence boundary is not a coordination; ASR can merge sentences.

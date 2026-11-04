@@ -394,3 +394,17 @@ complete suite passed. No claim of human visual review of screenshots is made.
 [Draft PR #11](https://github.com/jimmyhanh/VerifiStream-factchecker/pull/11).
 This validation record is a documentation-only update after the tested implementation.
 Next: user rehearsal, then M11 background jobs/caching/scalability; live input is M12.
+
+## Dashboard follow-up: reviewed claims and video deletion
+
+- [x] Specific abstention reasons instead of the generic unsupported-scope message.
+- [x] Manual proposition editing and explicit approval preserving original provenance.
+- [x] Optional structured AI drafts; no automatic approval or paid calls in tests.
+- [x] Approved propositions integrate with retrieval through confidence.
+- [x] Delete one / clear all, confirmations, active-request exclusion, cache preservation.
+- [x] Backend local validation: 301 passed, 1 optional real-ASR test skipped.
+- [x] Frontend production build and TypeScript validation.
+- [ ] Browser and container CI validation: PR #12 is draft; workflow has not started.
+
+These changes address the real-video decomposition blocker before Milestone 11.
+Milestone 11 remains background jobs, caching and scalability; live video is Milestone 12.

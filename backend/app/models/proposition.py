@@ -63,7 +63,7 @@ class AtomicProposition(BaseModel):
     parent_candidate_id: UUID
     text: str
     kind: Literal['factual', 'observed_outcome', 'causal']
-    transformation: Literal['source_clause', 'policy_change_outcome', 'policy_jobs_outcome']
+    transformation: Literal['source_clause', 'policy_change_outcome', 'policy_jobs_outcome', 'reviewed_interpretation']
     source_parts: list[SourcePart]
     source_quote: str
     segment_ids: list[int]
