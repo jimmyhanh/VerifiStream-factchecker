@@ -259,7 +259,7 @@ test("proposition selection is capped at three", async ({ page }) => {
       exact: true,
     }),
   });
-  const boxes = atoms.getByRole("checkbox");
+  const boxes = atoms.locator(".atomic-option").getByRole("checkbox");
   await expect(boxes).toHaveCount(4);
   for (let i = 0; i < 3; i++) await boxes.nth(i).check();
   await expect(boxes.nth(3)).toBeDisabled();
