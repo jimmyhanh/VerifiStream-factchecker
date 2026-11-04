@@ -43,3 +43,12 @@ trust scoring even when page metadata is complete. A browser regression checks c
 submission and the source assessment disclosure; browser execution remains a separate
 CI acceptance check. Local TypeScript checking and production build passed. Run `npm run test:unit`, `npm run typecheck`, `npm run build` in
 frontend; `npm test` also runs browser checks with synthetic providers.
+
+## Completed CI validation
+
+Run 41904731527 tested code commit bf67db10ace45dd4e3af2c50728dcf61784ba871:
+302 backend tests passed, 6 frontend unit tests passed, 14 Playwright checks passed
+(including context submission, source disclosure and delete/clear), and both Docker
+services passed smoke checks. The first run exposed a pre-existing confirmation-test
+race; the test now waits for each dialog to finish before installing the next handler.
+No live paid provider requests were used.

@@ -416,5 +416,5 @@ Milestone 11 remains background jobs, caching and scalability; live video is Mil
 - [x] Source assessment disclosure on retrieved evidence and final citations.
 - [x] Explicit Not rated / null score while verified trust signals are unavailable.
 - [x] Six unit tests, TypeScript checking and production build passed; browser regression added.
-- [ ] Execute new browser regression in CI.
+- [x] CI run 41904731527: 302 backend tests, 6 unit tests, 14 Playwright checks and Docker checks passed.
 - [ ] Numeric source trust scoring: needs validated signals and an evaluated rubric.
