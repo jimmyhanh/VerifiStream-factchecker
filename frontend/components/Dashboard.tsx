@@ -16,6 +16,7 @@ import {
 import { newestSelection, selectHistory } from "@/lib/history";
 import { Badge, Empty, RunHistory, RunNotice, SourceLink } from "./Shared";
 import Findings from "./Findings";
+import JobsPanel from "./JobsPanel";
 import ReviewPanel from "./ReviewPanel";
 import ContextSuggestions from "./ContextSuggestions";
 import SourceAssessment from "./SourceAssessment";
@@ -524,6 +525,16 @@ export default function Dashboard() {
             Audio extraction failed: {video.error_message || video.error_code}.
             Upload a corrected video to continue.
           </p>
+        )}
+        {video && (
+          <JobsPanel
+            key={video.id}
+            videoId={video.id}
+            mappingId={selected.mapping?.id}
+            onRefresh={() =>
+              work("Loading saved job results…", () => open(video))
+            }
+          />
         )}
         <fieldset className="workspace-fields" disabled={!!busy}>
           {tab === 0 && (

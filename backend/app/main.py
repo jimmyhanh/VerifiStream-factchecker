@@ -1,3 +1,7 @@
+from contextlib import asynccontextmanager
+import hashlib
+from pydantic import ValidationError, BaseModel
+from app.jobs.service import LocalJobs, Job, JobRequest
 from uuid import UUID
 from fastapi import FastAPI, Request, Query
 from fastapi.middleware.cors import CORSMiddleware
@@ -133,7 +137,61 @@ def create_app(
         config, video_storage, video_repository,
         media or FFmpegProcessor(config),
     )
-    app = FastAPI(title="VerifiStream", version="0.1.0")
+    adapters = {
+        'transcript': (TranscriptRequest, transcription),
+        'claims': (ClaimRequest, claims), 'atoms': (DecompositionRequest, decomposition),
+        'retrieval': (RetrievalRequest, retrieval), 'mapping': (MappingRequest, mapping),
+        'ranking': (RankingRequest, ranking), 'verification': (VerificationRequest, verification),
+        'confidence': (ConfidenceRequest, confidence),
+    }
+    def validate_job(video_id, request):
+        service.get(video_id)
+        action = 'transcript' if request.action == 'analyze' else 'ranking' if request.action == 'findings' else request.action
+        try:
+            parsed = adapters[action][0].model_validate(request.input)
+        except ValidationError:
+            raise ServiceError('invalid_job_input', 'Job input does not match the selected action.', 422)
+        required = {'claims':'transcript_run_id','atoms':'claim_run_id','retrieval':'decomposition_run_id'}
+        if action in required and getattr(parsed, required[action]) is None:
+            raise ServiceError('explicit_parent_required','Background jobs require an explicit parent run ID.',422)
+
+    def execute_job(job, checkpoint):
+        def step(action, payload):
+            schema, adapter = adapters[action]
+            if action in job.outputs:
+                run = adapter.get(job.video_id, job.outputs[action])
+                if run.status not in ('completed','partial'):
+                    raise ServiceError('invalid_checkpoint','Saved checkpoint is not complete.',409)
+            else:
+                checkpoint(job, action)
+                run = adapter.create(job.video_id, schema.model_validate(payload))
+                if run.status not in ('completed','partial'):
+                    raise ServiceError('job_stage_failed', 'Stage failed; inspect its saved run before retrying.', 422)
+                checkpoint(job, action, run.id)
+            return run
+        if job.request.action == 'analyze':
+            transcript = step('transcript', job.request.input)
+            claim = step('claims', {'transcript_run_id': transcript.id})
+            step('atoms', {'claim_run_id': claim.id})
+            checkpoint(job, 'review_claims')
+        elif job.request.action == 'findings':
+            ranked = step('ranking', job.request.input)
+            verified = step('verification', {'ranking_run_id':ranked.id})
+            step('confidence', {'verification_run_id':verified.id})
+        else:
+            step(job.request.action, job.request.input)
+
+    # Non-secret configuration identity prevents checkpoint reuse after model/config changes.
+    identity = hashlib.sha256(('jobs-v1:' + config.model_dump_json(exclude={'openai_api_key','brave_search_api_key'})).encode()).hexdigest()
+    jobs = LocalJobs(config.storage_root, activity, execute_job, validate_job, identity)
+    @asynccontextmanager
+    async def lifespan(application):
+        jobs.start()
+        try: yield
+        finally: await run_in_threadpool(jobs.close)
+    app = FastAPI(title="VerifiStream", version="0.1.0", lifespan=lifespan)
+    app.state.jobs = jobs
+
     app.add_middleware(
         UploadLimits, max_bytes=config.max_video_bytes + 64 * 1024,
         slots=config.max_concurrent_uploads,
@@ -219,6 +277,31 @@ def create_app(
                 service.upload, uploaded.file, uploaded.filename,
                 uploaded.content_type or "application/octet-stream",
             )
+
+    @app.post('/videos/{video_id}/jobs', response_model=Job, status_code=202)
+    def submit_job(video_id: UUID, request: JobRequest):
+        return jobs.submit(video_id, request)
+
+    @app.get('/videos/{video_id}/jobs', response_model=list[Job])
+    def list_jobs(video_id: UUID):
+        service.get(video_id)
+        return jobs.list(video_id)
+
+    @app.get('/videos/{video_id}/jobs/{job_id}', response_model=Job)
+    def get_job(video_id: UUID, job_id: UUID):
+        service.get(video_id)
+        return jobs.get(video_id, job_id)
+
+    class RetryJob(BaseModel):
+        key: UUID
+
+    @app.post('/videos/{video_id}/jobs/{job_id}/retry', response_model=Job, status_code=202)
+    def retry_job(video_id: UUID, job_id: UUID, request: RetryJob):
+        return jobs.retry(video_id, job_id, request.key)
+
+    @app.post('/videos/{video_id}/jobs/{job_id}/cancel', response_model=Job)
+    def cancel_job(video_id: UUID, job_id: UUID):
+        return jobs.cancel(video_id, job_id)
 
     @app.get("/videos/{video_id}", response_model=VideoRecord)
     def get_video(video_id: UUID) -> VideoRecord:

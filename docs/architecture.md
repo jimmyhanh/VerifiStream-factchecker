@@ -259,3 +259,16 @@ moves a whole per-video directory to a tombstone, then purges it. Incomplete pur
 reported and retried on clear. Clear requires a confirmed inventory matching the current
 library. Models and unrelated directories remain. Multi-process workers will require a
 shared job/deletion coordination mechanism before this gate can be scaled.
+
+## Background execution: initial local adapter
+
+The LocalJobs service persists per-video job records and invokes existing service
+adapters through validated action dispatch. Stage outputs stay in their existing
+immutable repositories. A bounded single worker holds an OS advisory lock for its
+lifetime; multiple API workers are rejected. Queue reservations participate in the
+video activity gate, protecting queued and running inputs from deletion. On process
+restart, queued work resumes and running work becomes interrupted. Explicit retry
+creates a linked attempt and reuses only successful checkpoints under the same
+non-secret configuration fingerprint. An in-flight external call is not exactly-once.
+The action contract and run IDs allow a future shared queue/database adapter; the
+current JSON backend must not be horizontally scaled.

@@ -428,3 +428,19 @@ Milestone 11 remains background jobs, caching and scalability; live video is Mil
 - [x] Confidence levels and explicit missing-evidence / incomplete-mapping explanations.
 - [x] Ten local frontend unit tests passed; automatic workflow browser test added.
 - [x] CI 41913452397 passed: 302 backend, 10 frontend unit, 15 Playwright checks, production build/typecheck and Docker.
+
+## Milestone 11 — first increment: durable background jobs
+
+- [x] Persisted job queue, bounded single worker and single-owner storage lock.
+- [x] 202 submission/status APIs, request-key deduplication and explicit parent IDs.
+- [x] Analyze-to-review and findings-to-confidence job workflows.
+- [x] Checkpoints, queued cancellation, interrupted recovery and explicit retries.
+- [x] Queued/running work blocks destructive video deletion.
+- [x] Dashboard polling survives refresh; saved results can be reopened.
+- [x] Seven focused job tests passed locally; browser refresh test passed in CI.
+- [x] CI 41929952556: 309 backend tests, 10 frontend unit tests, 16 Playwright checks and Docker passed.
+- [ ] Async upload/audio extraction, separate workers/shared database coordination.
+- [ ] Freshness/version-aware result caching beyond request deduplication.
+- [ ] End-to-end automatic continuation after claim review and real-video evaluation.
+
+Milestone 11 remains in progress; live processing is still Milestone 12.
