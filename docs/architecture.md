@@ -244,3 +244,18 @@ remain development constraints. M11 can introduce summary queries, pagination of
 run histories, durable jobs and indexed storage without moving scoring or evidence
 logic into the browser. The frontend Docker image uses standalone Next output,
 locked npm dependencies and a non-root runtime user; both service ports stay local.
+
+## Reviewed interpretations and deletion
+
+The review module adds immutable suggestion drafts separately from decomposition runs.
+Human approval creates a new versioned decomposition with exact original quote spans,
+claim snapshot and approval request; optional AI prompt/model/usage and draft snapshot
+are retained. `reviewed_interpretation` explicitly distinguishes edited interpretations
+from deterministic splits. Old snapshot model fields and hashes stay compatible.
+Drafts cannot enter retrieval until approved; approval never establishes factual truth.
+
+Video deletion runs behind a process-local request activity gate. Storage atomically
+moves a whole per-video directory to a tombstone, then purges it. Incomplete purge is
+reported and retried on clear. Clear requires a confirmed inventory matching the current
+library. Models and unrelated directories remain. Multi-process workers will require a
+shared job/deletion coordination mechanism before this gate can be scaled.

@@ -4,13 +4,11 @@ async function upload(page: Page) {
   await expect(
     page.getByRole("button", { name: /Upload & extract/ }),
   ).toBeDisabled();
-  await page
-    .getByLabel("Video file")
-    .setInputFiles({
-      name: "synthetic-browser-test.mp4",
-      mimeType: "video/mp4",
-      buffer: Buffer.from("fixture media"),
-    });
+  await page.getByLabel("Video file").setInputFiles({
+    name: "synthetic-browser-test.mp4",
+    mimeType: "video/mp4",
+    buffer: Buffer.from("fixture media"),
+  });
   await page.getByRole("button", { name: /Upload & extract/ }).click();
   await expect(
     page.getByRole("heading", { name: "Timestamped transcript" }),
@@ -25,24 +23,20 @@ async function toAtoms(page: Page) {
     page.getByText("In 2024, London opened 2 schools.", { exact: true }),
   ).toBeVisible();
   await page.getByRole("button", { name: /Detect check-worthy/ }).click();
-  const claims = page
-    .locator("section")
-    .filter({
-      has: page.getByRole("heading", { name: "Check-worthy candidates" }),
-    });
+  const claims = page.locator("section").filter({
+    has: page.getByRole("heading", { name: "Check-worthy candidates" }),
+  });
   await claims.getByRole("checkbox").first().check();
   await page.getByRole("button", { name: "Decompose selected claims" }).click();
   await expect(
     page.getByRole("button", { name: /Retrieve evidence/ }),
   ).toBeDisabled();
-  const atoms = page
-    .locator("section")
-    .filter({
-      has: page.getByRole("heading", {
-        name: "Atomic propositions",
-        exact: true,
-      }),
-    });
+  const atoms = page.locator("section").filter({
+    has: page.getByRole("heading", {
+      name: "Atomic propositions",
+      exact: true,
+    }),
+  });
   await atoms.getByRole("checkbox").first().check();
 }
 async function toMapping(page: Page) {
@@ -190,7 +184,9 @@ test("manual URL validation and network failure do not silently retry mutations"
     } else await route.continue();
   });
   await page.getByRole("button", { name: /Retrieve evidence/ }).click();
-  await expect(page.locator(".notice[role=alert]")).toContainText("may still be running");
+  await expect(page.locator(".notice[role=alert]")).toContainText(
+    "may still be running",
+  );
   expect(calls).toBe(1);
   await expect(
     page.getByRole("button", { name: /Retrieve evidence/ }),
@@ -254,14 +250,12 @@ test("proposition selection is capped at three", async ({ page }) => {
     await route.fulfill({ json: runs });
   });
   await page.getByRole("button", { name: "Refresh saved runs" }).click();
-  const atoms = page
-    .locator("section")
-    .filter({
-      has: page.getByRole("heading", {
-        name: "Atomic propositions",
-        exact: true,
-      }),
-    });
+  const atoms = page.locator("section").filter({
+    has: page.getByRole("heading", {
+      name: "Atomic propositions",
+      exact: true,
+    }),
+  });
   const boxes = atoms.getByRole("checkbox");
   await expect(boxes).toHaveCount(4);
   for (let i = 0; i < 3; i++) await boxes.nth(i).check();
@@ -293,4 +287,100 @@ test("passage selection is capped at twelve", async ({ page }) => {
   await expect(
     page.getByRole("button", { name: "Map selected evidence (12/12)" }),
   ).toBeEnabled();
+});
+
+for (const mode of ["manual", "AI"]) {
+  test(`review ${mode} suggestions before evidence search`, async ({
+    page,
+  }) => {
+    await toAtoms(page);
+    await page
+      .getByRole("button", {
+        name:
+          mode === "manual" ? "Review selected manually" : "Suggest with AI",
+        exact: true,
+      })
+      .click();
+    const panel = page.locator(".review-panel");
+    await expect(panel.getByLabel("Proposition wording 1")).toHaveValue(
+      "In 2024, London opened 2 schools.",
+    );
+    await panel.getByLabel("Needs search context", { exact: false }).uncheck();
+    await expect(
+      panel.getByRole("button", { name: "Approve & enable search" }),
+    ).toBeDisabled();
+    await panel.getByLabel(/I checked every proposition/).check();
+    await panel
+      .getByLabel("Proposition wording 1")
+      .fill("In 2024, London opened 2 schools.");
+    await expect(
+      panel.getByRole("button", { name: "Approve & enable search" }),
+    ).toBeDisabled();
+    await panel.getByLabel(/I checked every proposition/).check();
+    await panel
+      .getByRole("button", { name: "Approve & enable search" })
+      .click();
+    await expect(
+      page.getByText(/User-reviewed interpretations\. The original/),
+    ).toBeVisible();
+    const atoms = page
+      .locator("section")
+      .filter({
+        has: page.getByRole("heading", {
+          name: "Atomic propositions",
+          exact: true,
+        }),
+      });
+    await atoms.getByRole("checkbox").first().check();
+    await page.getByRole("button", { name: /Retrieve evidence/ }).click();
+    await expect(
+      page.getByRole("heading", { name: "Retrieved evidence", exact: true }),
+    ).toBeVisible();
+  });
+}
+
+test("delete and clear require confirmation and refresh the library", async ({
+  page,
+}) => {
+  await upload(page);
+  page.once("dialog", (dialog) => dialog.dismiss());
+  await page
+    .getByRole("button", { name: "Delete this video", exact: true })
+    .click();
+  await expect(
+    page.getByRole("button", { name: "Delete this video", exact: true }),
+  ).toBeVisible();
+  page.once("dialog", (dialog) => {
+    expect(dialog.message()).toContain("synthetic-browser-test.mp4");
+    return dialog.accept();
+  });
+  await page
+    .getByRole("button", { name: "Delete this video", exact: true })
+    .click();
+  await expect(
+    page.getByRole("button", { name: "Delete this video", exact: true }),
+  ).toHaveCount(0);
+  await upload(page);
+  page.once("dialog", (dialog) => dialog.dismiss());
+  await page
+    .getByRole("button", { name: "Clear all videos", exact: true })
+    .click();
+  await expect(
+    page.getByRole("button", { name: "Delete this video", exact: true }),
+  ).toBeVisible();
+  page.once("dialog", (dialog) => {
+    expect(dialog.message()).toContain(
+      "Downloaded transcription models are kept",
+    );
+    return dialog.accept();
+  });
+  await page
+    .getByRole("button", { name: "Clear all videos", exact: true })
+    .click();
+  await expect(
+    page.getByRole("button", { name: "Delete this video", exact: true }),
+  ).toHaveCount(0);
+  await expect(page.locator(".notice")).toContainText(
+    "All uploaded videos and their associated runs cleared.",
+  );
 });

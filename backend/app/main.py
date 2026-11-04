@@ -54,6 +54,12 @@ from app.models.confidence import ConfidenceRequest, ConfidenceRun
 from app.confidence.algorithm import ConfidenceAlgorithm, TransparentConfidenceAlgorithm
 from app.confidence.repository import ConfidenceRepository, JsonConfidenceRepository
 from app.confidence.service import ConfidenceService
+from app.models.review import DraftRequest, DraftRun, ReviewRequest
+from app.review.provider import SuggestionProvider, OpenAISuggestionProvider
+from app.review.repository import JsonDraftRepository
+from app.review.service import ReviewService
+from app.videos.deletion import (VideoActivity, VideoActivityMiddleware, VideoDeletionService,
+    ClearVideosRequest, DeletionPreview, DeletionResult)
 
 
 def create_app(
@@ -79,6 +85,7 @@ def create_app(
     verification_policy: VerificationPolicy | None = None,
     confidence_repository: ConfidenceRepository | None = None,
     confidence_algorithm: ConfidenceAlgorithm | None = None,
+    suggestion_provider: SuggestionProvider | None = None,
 ) -> FastAPI:
     config = settings or Settings.from_env()
     video_storage = storage or LocalVideoStorage(config.storage_root)
@@ -87,6 +94,11 @@ def create_app(
     claim_records = claim_repository or JsonClaimRepository(config.storage_root)
     decomposition_records = decomposition_repository or JsonDecompositionRepository(config.storage_root)
     retrieval_records = retrieval_repository or JsonRetrievalRepository(config.storage_root)
+    activity = VideoActivity()
+    deletion = VideoDeletionService(video_repository, video_storage, activity)
+    review = ReviewService(video_repository, claim_records, JsonDraftRepository(config.storage_root),
+        decomposition_records, suggestion_provider or OpenAISuggestionProvider(
+            config.openai_api_key.get_secret_value(), config.decomposition_model or config.mapping_model))
     mapping_records = mapping_repository or JsonMappingRepository(config.storage_root)
     ranking_records = ranking_repository or JsonRankingRepository(config.storage_root)
     verification_records = verification_repository or JsonVerificationRepository(config.storage_root)
@@ -127,8 +139,9 @@ def create_app(
         slots=config.max_concurrent_uploads,
     )
 
+    app.add_middleware(VideoActivityMiddleware, activity=activity)
     app.add_middleware(CORSMiddleware, allow_origins=config.cors_origins,
-                       allow_methods=["GET", "POST"], allow_headers=["Content-Type"],
+                       allow_methods=["GET", "POST", "DELETE"], allow_headers=["Content-Type"],
                        allow_credentials=False)
 
     @app.exception_handler(ServiceError)
@@ -154,6 +167,34 @@ def create_app(
     def public_configuration() -> PublicConfiguration:
         return PublicConfiguration(max_video_bytes=config.max_video_bytes,
                                    max_duration_seconds=config.max_duration_seconds)
+
+    @app.get('/videos/deletion-preview', response_model=DeletionPreview)
+    def deletion_preview() -> DeletionPreview:
+        return deletion.preview()
+
+    @app.delete('/videos', response_model=DeletionResult)
+    def clear_videos(request: ClearVideosRequest) -> DeletionResult:
+        return deletion.clear(request)
+
+    @app.delete('/videos/{video_id}', response_model=DeletionResult)
+    def delete_video(video_id: UUID) -> DeletionResult:
+        return deletion.delete(video_id)
+
+    @app.post('/videos/{video_id}/proposition-drafts', response_model=DraftRun, status_code=201)
+    def suggest_propositions(video_id: UUID, request: DraftRequest) -> DraftRun:
+        return review.suggest(video_id, request)
+
+    @app.get('/videos/{video_id}/proposition-drafts', response_model=list[DraftRun])
+    def list_proposition_drafts(video_id: UUID) -> list[DraftRun]:
+        return review.list(video_id)
+
+    @app.get('/videos/{video_id}/proposition-drafts/{run_id}', response_model=DraftRun)
+    def get_proposition_draft(video_id: UUID, run_id: UUID) -> DraftRun:
+        return review.get(video_id, run_id)
+
+    @app.post('/videos/{video_id}/reviewed-decompositions', response_model=DecompositionRun, status_code=201)
+    def approve_propositions(video_id: UUID, request: ReviewRequest) -> DecompositionRun:
+        return review.approve(video_id, request)
 
     @app.get("/videos", response_model=list[VideoRecord])
     def list_videos(limit: int = Query(default=50, ge=1, le=100),
