@@ -38,6 +38,7 @@ async function toAtoms(page: Page) {
     }),
   });
   await atoms.getByRole("checkbox").first().check();
+  await page.getByLabel(/Automatically screen retrieved evidence/).uncheck();
 }
 async function toMapping(page: Page) {
   await toAtoms(page);
@@ -50,7 +51,9 @@ async function toMapping(page: Page) {
   ).toBeDisabled();
   await page.getByRole("checkbox").first().check();
   await page.getByRole("button", { name: /Map selected evidence/ }).click();
-  await expect(page.getByText("SUPPORTS", { exact: true })).toBeVisible();
+  await expect(
+    page.getByText("SUPPORTS", { exact: true }).first(),
+  ).toBeVisible();
 }
 async function complete(page: Page) {
   await toMapping(page);
@@ -344,32 +347,64 @@ for (const mode of ["manual", "AI"]) {
   });
 }
 
-test("delete and clear require confirmation and refresh the library", async ({page}) => {
-  async function confirmAction(button: string, accept: boolean, expected: string) {
+test("delete and clear require confirmation and refresh the library", async ({
+  page,
+}) => {
+  async function confirmAction(
+    button: string,
+    accept: boolean,
+    expected: string,
+  ) {
     const handled = new Promise<void>((resolve, reject) => {
-      page.once("dialog", async dialog => {
+      page.once("dialog", async (dialog) => {
         try {
           expect(dialog.message()).toContain(expected);
-          if (accept) await dialog.accept(); else await dialog.dismiss();
+          if (accept) await dialog.accept();
+          else await dialog.dismiss();
           resolve();
-        } catch(error) { reject(error); }
+        } catch (error) {
+          reject(error);
+        }
       });
     });
-    await page.getByRole("button",{name:button,exact:true}).click();
+    await page.getByRole("button", { name: button, exact: true }).click();
     await handled;
-    if (!accept) await expect(page.getByRole("button",{name:button,exact:true})).toBeEnabled();
+    if (!accept)
+      await expect(
+        page.getByRole("button", { name: button, exact: true }),
+      ).toBeEnabled();
   }
   await upload(page);
-  await confirmAction("Delete this video",false,"synthetic-browser-test.mp4");
-  await expect(page.getByRole("button",{name:"Delete this video",exact:true})).toBeVisible();
-  await confirmAction("Delete this video",true,"synthetic-browser-test.mp4");
-  await expect(page.getByRole("button",{name:"Delete this video",exact:true})).toHaveCount(0);
+  await confirmAction("Delete this video", false, "synthetic-browser-test.mp4");
+  await expect(
+    page.getByRole("button", { name: "Delete this video", exact: true }),
+  ).toBeVisible();
+  await confirmAction("Delete this video", true, "synthetic-browser-test.mp4");
+  await expect(
+    page.getByRole("button", { name: "Delete this video", exact: true }),
+  ).toHaveCount(0);
   await upload(page);
-  await confirmAction("Clear all videos",false,"Downloaded transcription models are kept");
-  await expect(page.getByRole("button",{name:"Delete this video",exact:true})).toBeVisible();
-  await confirmAction("Clear all videos",true,"Downloaded transcription models are kept");
-  await expect(page.getByRole("button",{name:"Delete this video",exact:true})).toHaveCount(0);
-  await expect(page.getByText("All uploaded videos and their associated runs cleared.",{exact:true})).toBeVisible();
+  await confirmAction(
+    "Clear all videos",
+    false,
+    "Downloaded transcription models are kept",
+  );
+  await expect(
+    page.getByRole("button", { name: "Delete this video", exact: true }),
+  ).toBeVisible();
+  await confirmAction(
+    "Clear all videos",
+    true,
+    "Downloaded transcription models are kept",
+  );
+  await expect(
+    page.getByRole("button", { name: "Delete this video", exact: true }),
+  ).toHaveCount(0);
+  await expect(
+    page.getByText("All uploaded videos and their associated runs cleared.", {
+      exact: true,
+    }),
+  ).toBeVisible();
 });
 
 test("context suggestions append to manual text and travel with the selected proposition", async ({
@@ -403,5 +438,31 @@ test("context suggestions append to manual text and travel with the selected pro
     .click();
   await expect(
     page.getByText(/Numeric trust score withheld/).first(),
+  ).toBeVisible();
+});
+
+test("automatic screening labels evidence and builds confidence with exact reload ancestry", async ({
+  page,
+}) => {
+  await toAtoms(page);
+  await page.getByLabel(/Automatically screen retrieved evidence/).check();
+  await page.getByRole("button", { name: /Retrieve evidence/ }).click();
+  await expect(
+    page
+      .locator(".evidence-screen-result")
+      .getByText("SUPPORTS", { exact: true }),
+  ).toBeVisible();
+  await page
+    .getByRole("button", { name: "Build findings & confidence", exact: true })
+    .click();
+  await expect(
+    page.getByText("Evidence Confidence: 50%", { exact: true }),
+  ).toBeVisible();
+  await expect(
+    page.getByText("Moderate evidence confidence", { exact: true }),
+  ).toBeVisible();
+  await page.reload();
+  await expect(
+    page.getByText("Evidence Confidence: 50%", { exact: true }),
   ).toBeVisible();
 });

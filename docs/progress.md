@@ -418,3 +418,13 @@ Milestone 11 remains background jobs, caching and scalability; live video is Mil
 - [x] Six unit tests, TypeScript checking and production build passed; browser regression added.
 - [x] CI run 41904731527: 302 backend tests, 6 unit tests, 14 Playwright checks and Docker checks passed.
 - [ ] Numeric source trust scoring: needs validated signals and an evaluated rubric.
+
+## Evidence screening and findings follow-up
+
+- [x] Prominent atomic selection/context controls and selected-state feedback.
+- [x] Automatic bounded screening on retrieval with cost disclosure and manual opt-out.
+- [x] Relationship/explanation labels and useful-first ordering retaining contradictions.
+- [x] Build findings and confidence in one action with exact run ancestry.
+- [x] Confidence levels and explicit missing-evidence / incomplete-mapping explanations.
+- [x] Ten local frontend unit tests passed; automatic workflow browser test added.
+- [ ] CI acceptance checks for this branch.
