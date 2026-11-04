@@ -408,3 +408,13 @@ Next: user rehearsal, then M11 background jobs/caching/scalability; live input i
 
 These changes address the real-video decomposition blocker before Milestone 11.
 Milestone 11 remains background jobs, caching and scalability; live video is Milestone 12.
+
+## Context suggestions and source assessment follow-up
+
+- [x] Clickable source-derived context alongside manual input, per proposition.
+- [x] Preserve relative dates, source quotations, manual text and 300-character limit.
+- [x] Source assessment disclosure on retrieved evidence and final citations.
+- [x] Explicit Not rated / null score while verified trust signals are unavailable.
+- [x] Six unit tests, TypeScript checking and production build passed; browser regression added.
+- [ ] Execute new browser regression in CI.
+- [ ] Numeric source trust scoring: needs validated signals and an evaluated rubric.

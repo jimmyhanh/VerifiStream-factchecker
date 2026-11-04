@@ -294,14 +294,12 @@ for (const mode of ["manual", "AI"]) {
     page,
   }) => {
     await toAtoms(page);
-    const candidates = page
-      .locator("section")
-      .filter({
-        has: page.getByRole("heading", {
-          name: "Check-worthy candidates",
-          exact: true,
-        }),
-      });
+    const candidates = page.locator("section").filter({
+      has: page.getByRole("heading", {
+        name: "Check-worthy candidates",
+        exact: true,
+      }),
+    });
     await candidates.getByRole("checkbox").first().check();
     await page
       .getByRole("button", {
@@ -391,5 +389,39 @@ test("delete and clear require confirmation and refresh the library", async ({
     page.getByText("All uploaded videos and their associated runs cleared.", {
       exact: true,
     }),
+  ).toBeVisible();
+});
+
+test("context suggestions append to manual text and travel with the selected proposition", async ({
+  page,
+}) => {
+  await toAtoms(page);
+  const field = page.getByRole("textbox", { name: /Search context 1/ });
+  await field.fill("Local education records");
+  const suggestions = page.getByRole("group", {
+    name: "Suggested search context",
+  });
+  await suggestions.getByRole("button", { name: "2024", exact: true }).click();
+  await expect(field).toHaveValue("Local education records\n2024");
+  await expect(
+    suggestions.getByRole("button", { name: "2024 · Added", exact: true }),
+  ).toBeDisabled();
+  const requestPromise = page.waitForRequest(
+    (r) => r.method() === "POST" && r.url().endsWith("/retrievals"),
+  );
+  await page.getByRole("button", { name: /Retrieve evidence/ }).click();
+  const body = (await requestPromise).postDataJSON();
+  expect(body.contexts[body.proposition_ids[0]]).toBe(
+    "Local education records\n2024",
+  );
+  await expect(
+    page.getByRole("heading", { name: "Retrieved evidence", exact: true }),
+  ).toBeVisible();
+  await page
+    .getByText("Source trust assessment: Not rated", { exact: true })
+    .first()
+    .click();
+  await expect(
+    page.getByText(/Numeric trust score withheld/).first(),
   ).toBeVisible();
 });
