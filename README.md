@@ -1021,3 +1021,21 @@ Expand it to inspect available metadata and missing reliability signals. Numeric
 scores are withheld because current page-declared metadata is not verified credibility
 evidence. This is separate from Evidence Confidence. See
 [context and source assessments](docs/context-and-source-assessment.md).
+
+### Screen evidence and build findings
+
+Atomic propositions now use prominent selection cards and context suggestion buttons.
+**Automatically screen retrieved evidence** is on by default: clicking Retrieve evidence
+also sends up to 12 passages to the configured mapping model (provider charges may apply).
+Turn it off for manual passage selection. Screening balances selected propositions and
+uses lexical match only to choose candidates, never as a verdict. Remaining passages
+are marked Not screened; they are not silently treated as irrelevant.
+
+Evidence cards show relationship labels and explanations. Support, contradiction and
+qualification share the highest display priority; background and irrelevant passages
+remain inspectable. **Build findings & confidence** runs ranking, verification and the
+versioned confidence calculation together using all passages in the selected mapping
+run. It preserves contradictions and unresolved items. Existing manual controls remain.
+Findings show experimental confidence bands and explain mapping failures, missing
+coverage and lack of decisive evidence. Insufficient Evidence remains a valid outcome,
+not a false verdict; the score measures evidence adequacy, not probability of truth.

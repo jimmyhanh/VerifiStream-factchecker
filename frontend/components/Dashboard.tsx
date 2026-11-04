@@ -19,6 +19,7 @@ import Findings from "./Findings";
 import ReviewPanel from "./ReviewPanel";
 import ContextSuggestions from "./ContextSuggestions";
 import SourceAssessment from "./SourceAssessment";
+import { screeningIds, evidencePriority } from "@/lib/evidence-workflow";
 const tabs = ["Upload", "Transcript", "Claims", "Evidence", "Findings"];
 const stageTab: Record<Stage, number> = {
   transcript: 1,
@@ -49,11 +50,14 @@ export default function Dashboard() {
     [urls, setUrls] = useState<Record<string, string>>({});
   const [mode, setMode] = useState<"search" | "manual_urls">("search");
   const [reviewTarget, setReviewTarget] = useState<string[]>([]);
+  const [autoScreen, setAutoScreen] = useState(true);
   const locked = useRef(false);
+  const historyRef = useRef(history);
+  historyRef.current = history;
   const propositions =
     selected.atoms?.results.flatMap((r) => r.propositions) || [];
   const sources = selected.retrieval?.sources || [];
-  async function work(label: string, task: () => Promise<void>) {
+  async function work(label: string, task: () => Promise<unknown>) {
     if (locked.current) return;
     locked.current = true;
     setBusy(label);
@@ -143,7 +147,11 @@ export default function Dashboard() {
       `/videos/${video.id}/${endpoints[stage]}`,
       body,
     );
-    const next = { ...history, [stage]: [run, ...history[stage]] } as History;
+    const next = {
+      ...historyRef.current,
+      [stage]: [run, ...historyRef.current[stage]],
+    } as History;
+    historyRef.current = next;
     setHistory(next);
     setSelected(selectHistory(next, stage, run));
     clearChoices();
@@ -155,6 +163,29 @@ export default function Dashboard() {
           ? "Run saved with partial results. Inspect unresolved passages."
           : "Run saved. Review the results before continuing.",
     );
+    return run;
+  }
+  async function screen(run = selected.retrieval) {
+    if (!run) return;
+    const ids = screeningIds(run);
+    if (!ids.length) {
+      setMessage("No passages available to screen.");
+      return;
+    }
+    setBusy("Screening retrieved passages with your configured model…");
+    await create("mapping", { retrieval_run_id: run.id, passage_ids: ids });
+  }
+  async function buildFindings() {
+    if (!selected.mapping) return;
+    const ranking = await create("ranking", {
+      mapping_run_id: selected.mapping.id,
+    });
+    if (ranking?.status !== "completed") return;
+    const verification = await create("verification", {
+      ranking_run_id: ranking.id,
+    });
+    if (verification?.status !== "completed") return;
+    await create("confidence", { verification_run_id: verification.id });
   }
   function runControl(stage: Stage, label: string) {
     return (
@@ -245,7 +276,8 @@ export default function Dashboard() {
         input.source_urls[id] = list;
       }
     }
-    await create("retrieval", input);
+    const run = await create("retrieval", input);
+    if (autoScreen && run?.status === "completed") await screen(run);
   }
   function reviewed(run: Runs["atoms"]) {
     const next = { ...history, atoms: [run, ...history.atoms] };
@@ -761,7 +793,10 @@ export default function Dashboard() {
                       </button>
                     )}
                     {r.propositions.map((p) => (
-                      <label className="select-card" key={p.id}>
+                      <label
+                        className={`select-card atomic-option ${propositionIds.includes(p.id) ? "is-selected" : ""}`}
+                        key={p.id}
+                      >
                         <input
                           type="checkbox"
                           checked={propositionIds.includes(p.id)}
@@ -774,6 +809,11 @@ export default function Dashboard() {
                           }
                         />
                         <span>
+                          <span className="selection-hint">
+                            {propositionIds.includes(p.id)
+                              ? "✓ Selected for evidence search"
+                              : "+ Select this proposition"}
+                          </span>
                           <strong>{p.text}</strong>
                           <small>
                             {p.kind.replaceAll("_", " ")} ·{" "}
@@ -862,6 +902,16 @@ export default function Dashboard() {
                           )}
                         </div>
                       ))}
+                    <label className="screen-setting">
+                      <input
+                        type="checkbox"
+                        checked={autoScreen}
+                        onChange={(e) => setAutoScreen(e.target.checked)}
+                      />{" "}
+                      Automatically screen retrieved evidence (up to 12
+                      passages; sends claims and passages to your configured AI
+                      provider; charges may apply)
+                    </label>
                     <div className="actions">
                       <button
                         className="primary"
@@ -887,10 +937,41 @@ export default function Dashboard() {
                 <span className="eyebrow">04 / Read before assessing</span>
                 <h2>Retrieved evidence</h2>
                 <p>
-                  Choose relevant passages to map. Retrieval alone does not
-                  establish support.
+                  Evidence is screened before you decide what to inspect.
+                  Support, contradiction and qualification appear first;
+                  irrelevant passages stay visible. Screening is an AI
+                  interpretation, not proof.
                 </p>
                 {runControl("retrieval", "Retrieval")}
+                {selected.retrieval && (
+                  <div className="screen-summary">
+                    <strong>
+                      {selected.mapping?.request.retrieval_run_id ===
+                      selected.retrieval.id
+                        ? selected.mapping.results.length
+                        : 0}{" "}
+                      /{" "}
+                      {selected.retrieval.results.reduce(
+                        (n, r) => n + r.passages.length,
+                        0,
+                      )}{" "}
+                      passages screened in the selected run
+                    </strong>
+                    <p>
+                      Only the selected screening run enters Findings.
+                      Unscreened passages and unresolved mappings remain
+                      coverage gaps.
+                    </p>
+                    <button
+                      className="secondary"
+                      onClick={() =>
+                        void work("Screening evidence…", () => screen())
+                      }
+                    >
+                      Screen evidence automatically
+                    </button>
+                  </div>
+                )}
                 {selected.retrieval?.results.map((r) => (
                   <div className="retrieval-result" key={r.proposition_id}>
                     <div className="row spread">
@@ -922,49 +1003,99 @@ export default function Dashboard() {
                         this does not mean the claim is false.
                       </Empty>
                     )}
-                    {r.passages.map((p) => {
-                      const source = sources.find((s) => s.id === p.source_id);
-                      return (
-                        <div className="passage-card" key={p.id}>
-                          <label className="select-card">
-                            <input
-                              type="checkbox"
-                              aria-label={`Select passage ${p.id}`}
-                              checked={passageIds.includes(p.id)}
-                              disabled={
-                                !passageIds.includes(p.id) &&
-                                passageIds.length >= 12
-                              }
-                              onChange={() =>
-                                toggle(p.id, passageIds, setPassageIds, 12)
-                              }
-                            />
-                            <span>
-                              <small>
-                                {source?.publisher || "Publisher unknown"} ·{" "}
-                                {source?.publication_date || "Date unknown"}
-                              </small>
+                    {[...r.passages]
+                      .sort(
+                        (a, b) =>
+                          evidencePriority(
+                            selected.mapping?.results.find(
+                              (m) => m.passage_id === a.id,
+                            ),
+                          ) -
+                          evidencePriority(
+                            selected.mapping?.results.find(
+                              (m) => m.passage_id === b.id,
+                            ),
+                          ),
+                      )
+                      .map((p) => {
+                        const mapped =
+                          selected.mapping?.request.retrieval_run_id ===
+                          selected.retrieval?.id
+                            ? selected.mapping?.results.find(
+                                (m) => m.passage_id === p.id,
+                              )
+                            : undefined;
+                        const relationship = mapped?.decision?.relationship;
+                        const source = sources.find(
+                          (s) => s.id === p.source_id,
+                        );
+                        return (
+                          <div
+                            className={`passage-card evidence-priority-${evidencePriority(mapped)}`}
+                            key={p.id}
+                          >
+                            <div className="evidence-screen-result">
+                              <Badge
+                                text={
+                                  relationship ||
+                                  (mapped ? "Needs review" : "Not screened")
+                                }
+                              />
                               <strong>
-                                {source?.title || "Retrieved passage"}
+                                {evidencePriority(mapped) === 0
+                                  ? "Useful for assessing this claim"
+                                  : relationship === "CONTEXT"
+                                    ? "Background only"
+                                    : relationship === "IRRELEVANT"
+                                      ? "Not relevant to this claim"
+                                      : "Relationship not established"}
                               </strong>
-                              <span className="passage-text">{p.text}</span>
-                            </span>
-                          </label>
-                          {source && <SourceAssessment source={source} />}
-                          {source && (
-                            <div className="passage-meta">
-                              <SourceLink url={source.final_url}>
-                                Open source
-                              </SourceLink>
-                              <span>
-                                {source.source_type} ·{" "}
-                                {source.primary_secondary} · Metadata unverified
-                              </span>
+                              <p>
+                                {mapped?.decision?.explanation ||
+                                  mapped?.error_code ||
+                                  "Screen this passage before interpreting it as evidence."}
+                              </p>
                             </div>
-                          )}
-                        </div>
-                      );
-                    })}
+                            <label className="select-card">
+                              <input
+                                type="checkbox"
+                                aria-label={`Select passage ${p.id}`}
+                                checked={passageIds.includes(p.id)}
+                                disabled={
+                                  !passageIds.includes(p.id) &&
+                                  passageIds.length >= 12
+                                }
+                                onChange={() =>
+                                  toggle(p.id, passageIds, setPassageIds, 12)
+                                }
+                              />
+                              <span>
+                                <small>
+                                  {source?.publisher || "Publisher unknown"} ·{" "}
+                                  {source?.publication_date || "Date unknown"}
+                                </small>
+                                <strong>
+                                  {source?.title || "Retrieved passage"}
+                                </strong>
+                                <span className="passage-text">{p.text}</span>
+                              </span>
+                            </label>
+                            {source && <SourceAssessment source={source} />}
+                            {source && (
+                              <div className="passage-meta">
+                                <SourceLink url={source.final_url}>
+                                  Open source
+                                </SourceLink>
+                                <span>
+                                  {source.source_type} ·{" "}
+                                  {source.primary_secondary} · Metadata
+                                  unverified
+                                </span>
+                              </div>
+                            )}
+                          </div>
+                        );
+                      })}
                   </div>
                 ))}
                 {!selected.retrieval && (
@@ -1033,6 +1164,30 @@ export default function Dashboard() {
                     qualification or context.
                   </Empty>
                 )}
+                <div className="actions">
+                  <button
+                    className="primary"
+                    disabled={
+                      !selected.mapping ||
+                      !["completed", "partial"].includes(
+                        selected.mapping.status,
+                      )
+                    }
+                    onClick={() =>
+                      void work(
+                        "Building findings and evidence confidence…",
+                        buildFindings,
+                      )
+                    }
+                  >
+                    Build findings & confidence
+                  </button>
+                  <p className="small">
+                    Uses all passages in this screening run, including
+                    contradictions and unresolved items. Confidence describes
+                    evidence adequacy, not the probability of truth.
+                  </p>
+                </div>
                 <div className="actions">
                   <button
                     className="primary"

@@ -1,5 +1,6 @@
 import { ConfidenceResult, Selection } from "@/lib/types";
 import { Badge, SourceLink, Empty } from "./Shared";
+import { confidenceLevel, evidenceGaps } from "@/lib/evidence-workflow";
 import SourceAssessment from "./SourceAssessment";
 import { timecode } from "@/lib/api";
 function Score({ result }: { result: ConfidenceResult }) {
@@ -10,6 +11,13 @@ function Score({ result }: { result: ConfidenceResult }) {
         <span className="badge neutral">Experimental · uncalibrated</span>
       </div>
       <p>Evidence adequacy—not the probability that this claim is true.</p>
+      <p className="confidence-level">
+        <strong>
+          {confidenceLevel(result.evidence_confidence)} evidence confidence
+        </strong>{" "}
+        · Experimental display bands: 0–24 very limited, 25–49 low, 50–74
+        moderate, 75–100 high. Not calibrated.
+      </p>
       <details>
         <summary>Inspect score components and limits</summary>
         <div className="table-scroll">
@@ -96,6 +104,24 @@ export default function Findings({ selected }: { selected: Selection }) {
           </div>
           <h3>{p.proposition_text}</h3>
           <p>{p.explanation}</p>
+          {evidenceGaps(p).length > 0 && (
+            <div className="evidence-gap">
+              <h4>
+                {p.coverage.unresolved_passage_ids.length
+                  ? "Assessment incomplete"
+                  : "What limits this finding?"}
+              </h4>
+              <ul>
+                {evidenceGaps(p).map((g) => (
+                  <li key={g}>{g}</li>
+                ))}
+              </ul>
+              <p>
+                Insufficient evidence is not a false verdict. Check claim scope,
+                missing dates, source coverage and mapping errors.
+              </p>
+            </div>
+          )}
           <div className="coverage">
             <span>
               <strong>{p.coverage.mapped_passages}</strong> mapped
