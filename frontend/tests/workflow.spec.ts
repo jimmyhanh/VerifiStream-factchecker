@@ -294,14 +294,12 @@ for (const mode of ["manual", "AI"]) {
     page,
   }) => {
     await toAtoms(page);
-    const candidates = page
-      .locator("section")
-      .filter({
-        has: page.getByRole("heading", {
-          name: "Check-worthy candidates",
-          exact: true,
-        }),
-      });
+    const candidates = page.locator("section").filter({
+      has: page.getByRole("heading", {
+        name: "Check-worthy candidates",
+        exact: true,
+      }),
+    });
     await candidates.getByRole("checkbox").first().check();
     await page
       .getByRole("button", {
@@ -346,50 +344,64 @@ for (const mode of ["manual", "AI"]) {
   });
 }
 
-test("delete and clear require confirmation and refresh the library", async ({
+test("delete and clear require confirmation and refresh the library", async ({page}) => {
+  async function confirmAction(button: string, accept: boolean, expected: string) {
+    const handled = new Promise<void>((resolve, reject) => {
+      page.once("dialog", async dialog => {
+        try {
+          expect(dialog.message()).toContain(expected);
+          if (accept) await dialog.accept(); else await dialog.dismiss();
+          resolve();
+        } catch(error) { reject(error); }
+      });
+    });
+    await page.getByRole("button",{name:button,exact:true}).click();
+    await handled;
+    if (!accept) await expect(page.getByRole("button",{name:button,exact:true})).toBeEnabled();
+  }
+  await upload(page);
+  await confirmAction("Delete this video",false,"synthetic-browser-test.mp4");
+  await expect(page.getByRole("button",{name:"Delete this video",exact:true})).toBeVisible();
+  await confirmAction("Delete this video",true,"synthetic-browser-test.mp4");
+  await expect(page.getByRole("button",{name:"Delete this video",exact:true})).toHaveCount(0);
+  await upload(page);
+  await confirmAction("Clear all videos",false,"Downloaded transcription models are kept");
+  await expect(page.getByRole("button",{name:"Delete this video",exact:true})).toBeVisible();
+  await confirmAction("Clear all videos",true,"Downloaded transcription models are kept");
+  await expect(page.getByRole("button",{name:"Delete this video",exact:true})).toHaveCount(0);
+  await expect(page.getByText("All uploaded videos and their associated runs cleared.",{exact:true})).toBeVisible();
+});
+
+test("context suggestions append to manual text and travel with the selected proposition", async ({
   page,
 }) => {
-  await upload(page);
-  page.once("dialog", (dialog) => dialog.dismiss());
-  await page
-    .getByRole("button", { name: "Delete this video", exact: true })
-    .click();
-  await expect(
-    page.getByRole("button", { name: "Delete this video", exact: true }),
-  ).toBeVisible();
-  page.once("dialog", (dialog) => {
-    expect(dialog.message()).toContain("synthetic-browser-test.mp4");
-    return dialog.accept();
+  await toAtoms(page);
+  const field = page.getByRole("textbox", { name: /Search context 1/ });
+  await field.fill("Local education records");
+  const suggestions = page.getByRole("group", {
+    name: "Suggested search context",
   });
-  await page
-    .getByRole("button", { name: "Delete this video", exact: true })
-    .click();
+  await suggestions.getByRole("button", { name: "2024", exact: true }).click();
+  await expect(field).toHaveValue("Local education records\n2024");
   await expect(
-    page.getByRole("button", { name: "Delete this video", exact: true }),
-  ).toHaveCount(0);
-  await upload(page);
-  page.once("dialog", (dialog) => dialog.dismiss());
-  await page
-    .getByRole("button", { name: "Clear all videos", exact: true })
-    .click();
+    suggestions.getByRole("button", { name: "2024 · Added", exact: true }),
+  ).toBeDisabled();
+  const requestPromise = page.waitForRequest(
+    (r) => r.method() === "POST" && r.url().endsWith("/retrievals"),
+  );
+  await page.getByRole("button", { name: /Retrieve evidence/ }).click();
+  const body = (await requestPromise).postDataJSON();
+  expect(body.contexts[body.proposition_ids[0]]).toBe(
+    "Local education records\n2024",
+  );
   await expect(
-    page.getByRole("button", { name: "Delete this video", exact: true }),
+    page.getByRole("heading", { name: "Retrieved evidence", exact: true }),
   ).toBeVisible();
-  page.once("dialog", (dialog) => {
-    expect(dialog.message()).toContain(
-      "Downloaded transcription models are kept",
-    );
-    return dialog.accept();
-  });
   await page
-    .getByRole("button", { name: "Clear all videos", exact: true })
+    .getByText("Source trust assessment: Not rated", { exact: true })
+    .first()
     .click();
   await expect(
-    page.getByRole("button", { name: "Delete this video", exact: true }),
-  ).toHaveCount(0);
-  await expect(
-    page.getByText("All uploaded videos and their associated runs cleared.", {
-      exact: true,
-    }),
+    page.getByText(/Numeric trust score withheld/).first(),
   ).toBeVisible();
 });

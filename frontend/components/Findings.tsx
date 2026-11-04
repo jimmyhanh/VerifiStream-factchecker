@@ -1,5 +1,6 @@
 import { ConfidenceResult, Selection } from "@/lib/types";
 import { Badge, SourceLink, Empty } from "./Shared";
+import SourceAssessment from "./SourceAssessment";
 import { timecode } from "@/lib/api";
 function Score({ result }: { result: ConfidenceResult }) {
   return (
@@ -154,6 +155,7 @@ export default function Findings({ selected }: { selected: Selection }) {
                 {c.publication_date || "date unknown"} · {c.source_type} ·{" "}
                 {c.primary_secondary}
               </p>
+              <SourceAssessment source={c} />
               <details>
                 <summary>Source provenance & caveats</summary>
                 <p className="small break">{c.url}</p>

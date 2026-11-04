@@ -1008,3 +1008,16 @@ Deletion has no undo. The app remains a local, single-process development system
 user authentication; do not expose these endpoints publicly.
 
 See [review and deletion design](docs/review-and-deletion.md) for limits and API details.
+
+### Clickable search context and source assessments
+
+After selecting atomic propositions, use **Suggested search context** beside each
+manual field. Click to append a quotation or search direction, then edit as needed.
+Suggestions preserve relative dates and do not guess missing places/years. They require
+no API key. Accepted text is saved in the retrieval run as unverified user context.
+
+Retrieved passages and final citations include **Source trust assessment: Not rated**.
+Expand it to inspect available metadata and missing reliability signals. Numeric trust
+scores are withheld because current page-declared metadata is not verified credibility
+evidence. This is separate from Evidence Confidence. See
+[context and source assessments](docs/context-and-source-assessment.md).

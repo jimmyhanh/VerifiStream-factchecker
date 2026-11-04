@@ -946,3 +946,44 @@ code {
 .review-source textarea {
   min-height: 100px;
 }
+
+.context-suggestions {
+  border-top: 1px solid var(--line, #d6e2e3);
+  padding-top: 12px;
+}
+.context-suggestions h5 {
+  margin: 0 0 8px;
+  font-size: 1rem;
+}
+.context-suggestion {
+  display: grid;
+  gap: 5px;
+  margin: 10px 0;
+}
+.context-suggestion button {
+  text-align: left;
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+.context-suggestion blockquote {
+  overflow-wrap: anywhere;
+}
+.source-assessment {
+  margin: 12px 0;
+  padding: 10px;
+  border: 1px solid var(--line, #d6e2e3);
+  border-radius: 8px;
+}
+.source-assessment dl > div {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 5px 0;
+}
+.source-assessment dt {
+  font-weight: 600;
+}
+.source-assessment dd {
+  margin: 0;
+  overflow-wrap: anywhere;
+}

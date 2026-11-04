@@ -17,6 +17,8 @@ import { newestSelection, selectHistory } from "@/lib/history";
 import { Badge, Empty, RunHistory, RunNotice, SourceLink } from "./Shared";
 import Findings from "./Findings";
 import ReviewPanel from "./ReviewPanel";
+import ContextSuggestions from "./ContextSuggestions";
+import SourceAssessment from "./SourceAssessment";
 const tabs = ["Upload", "Transcript", "Claims", "Evidence", "Findings"];
 const stageTab: Record<Stage, number> = {
   transcript: 1,
@@ -836,6 +838,16 @@ export default function Dashboard() {
                             Your context is unverified and does not change the
                             original proposition.
                           </p>
+                          <ContextSuggestions
+                            proposition={p}
+                            segments={
+                              selected.transcript?.result?.segments || []
+                            }
+                            value={contexts[p.id] || ""}
+                            onChange={(value) =>
+                              setContexts((old) => ({ ...old, [p.id]: value }))
+                            }
+                          />
                           {mode === "manual_urls" && (
                             <label>
                               Source URLs {i + 1}
@@ -938,6 +950,7 @@ export default function Dashboard() {
                               <span className="passage-text">{p.text}</span>
                             </span>
                           </label>
+                          {source && <SourceAssessment source={source} />}
                           {source && (
                             <div className="passage-meta">
                               <SourceLink url={source.final_url}>
