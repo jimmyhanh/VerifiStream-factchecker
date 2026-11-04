@@ -344,52 +344,32 @@ for (const mode of ["manual", "AI"]) {
   });
 }
 
-test("delete and clear require confirmation and refresh the library", async ({
-  page,
-}) => {
+test("delete and clear require confirmation and refresh the library", async ({page}) => {
+  async function confirmAction(button: string, accept: boolean, expected: string) {
+    const handled = new Promise<void>((resolve, reject) => {
+      page.once("dialog", async dialog => {
+        try {
+          expect(dialog.message()).toContain(expected);
+          if (accept) await dialog.accept(); else await dialog.dismiss();
+          resolve();
+        } catch(error) { reject(error); }
+      });
+    });
+    await page.getByRole("button",{name:button,exact:true}).click();
+    await handled;
+    if (!accept) await expect(page.getByRole("button",{name:button,exact:true})).toBeEnabled();
+  }
   await upload(page);
-  page.once("dialog", (dialog) => dialog.dismiss());
-  await page
-    .getByRole("button", { name: "Delete this video", exact: true })
-    .click();
-  await expect(
-    page.getByRole("button", { name: "Delete this video", exact: true }),
-  ).toBeVisible();
-  page.once("dialog", (dialog) => {
-    expect(dialog.message()).toContain("synthetic-browser-test.mp4");
-    return dialog.accept();
-  });
-  await page
-    .getByRole("button", { name: "Delete this video", exact: true })
-    .click();
-  await expect(
-    page.getByRole("button", { name: "Delete this video", exact: true }),
-  ).toHaveCount(0);
+  await confirmAction("Delete this video",false,"synthetic-browser-test.mp4");
+  await expect(page.getByRole("button",{name:"Delete this video",exact:true})).toBeVisible();
+  await confirmAction("Delete this video",true,"synthetic-browser-test.mp4");
+  await expect(page.getByRole("button",{name:"Delete this video",exact:true})).toHaveCount(0);
   await upload(page);
-  page.once("dialog", (dialog) => dialog.dismiss());
-  await page
-    .getByRole("button", { name: "Clear all videos", exact: true })
-    .click();
-  await expect(
-    page.getByRole("button", { name: "Delete this video", exact: true }),
-  ).toBeVisible();
-  page.once("dialog", (dialog) => {
-    expect(dialog.message()).toContain(
-      "Downloaded transcription models are kept",
-    );
-    return dialog.accept();
-  });
-  await page
-    .getByRole("button", { name: "Clear all videos", exact: true })
-    .click();
-  await expect(
-    page.getByRole("button", { name: "Delete this video", exact: true }),
-  ).toHaveCount(0);
-  await expect(
-    page.getByText("All uploaded videos and their associated runs cleared.", {
-      exact: true,
-    }),
-  ).toBeVisible();
+  await confirmAction("Clear all videos",false,"Downloaded transcription models are kept");
+  await expect(page.getByRole("button",{name:"Delete this video",exact:true})).toBeVisible();
+  await confirmAction("Clear all videos",true,"Downloaded transcription models are kept");
+  await expect(page.getByRole("button",{name:"Delete this video",exact:true})).toHaveCount(0);
+  await expect(page.getByText("All uploaded videos and their associated runs cleared.",{exact:true})).toBeVisible();
 });
 
 test("context suggestions append to manual text and travel with the selected proposition", async ({
