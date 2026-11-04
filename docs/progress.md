@@ -427,4 +427,4 @@ Milestone 11 remains background jobs, caching and scalability; live video is Mil
 - [x] Build findings and confidence in one action with exact run ancestry.
 - [x] Confidence levels and explicit missing-evidence / incomplete-mapping explanations.
 - [x] Ten local frontend unit tests passed; automatic workflow browser test added.
-- [ ] CI acceptance checks for this branch.
+- [x] CI 41913452397 passed: 302 backend, 10 frontend unit, 15 Playwright checks, production build/typecheck and Docker.

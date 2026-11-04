@@ -34,3 +34,11 @@ relationship ordering, confidence-band boundaries and gap explanations. Browser 
 adds automatic screening -> findings/confidence -> reload with exact ancestry. Existing
 manual workflow tests explicitly turn off automatic screening. CI validates both flows,
 backend regression and Docker. No live paid provider calls in tests.
+
+## Observed acceptance results
+
+CI run 41913452397 passed on commit 9e1892bede0199297190003929d285bb379fdcff:
+302 backend tests, 10 frontend unit tests, 15 Playwright checks, production build,
+TypeScript checking and Docker smoke checks. Automatic screening through confidence
+and reload ancestry passed. An older selection-limit test was narrowed to proposition
+cards so it does not count the new automatic-screening toggle.
