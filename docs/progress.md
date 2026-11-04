@@ -404,7 +404,7 @@ Next: user rehearsal, then M11 background jobs/caching/scalability; live input i
 - [x] Delete one / clear all, confirmations, active-request exclusion, cache preservation.
 - [x] Backend local validation: 301 passed, 1 optional real-ASR test skipped.
 - [x] Frontend production build and TypeScript validation.
-- [ ] Browser and container CI validation (results recorded in follow-up PR).
+- [ ] Browser and container CI validation: PR #12 is draft; workflow has not started.
 
 These changes address the real-video decomposition blocker before Milestone 11.
 Milestone 11 remains background jobs, caching and scalability; live video is Milestone 12.

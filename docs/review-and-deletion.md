@@ -60,3 +60,7 @@ faithful and require human review. Local approvals are not authenticated identit
 Deletion is permanent and limited to a single application process. A clear operation
 that encounters a filesystem rename error may have deleted earlier entries; the UI
 refreshes the inventory, and the operation does not roll back those deletions.
+
+Remote validation: PR #12 is draft. GitHub has not started a workflow for this
+branch as of this update, so browser and Docker acceptance remain unverified.
+The tests are committed; run the Backend tests workflow on this branch before merging.

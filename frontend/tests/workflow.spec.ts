@@ -294,6 +294,15 @@ for (const mode of ["manual", "AI"]) {
     page,
   }) => {
     await toAtoms(page);
+    const candidates = page
+      .locator("section")
+      .filter({
+        has: page.getByRole("heading", {
+          name: "Check-worthy candidates",
+          exact: true,
+        }),
+      });
+    await candidates.getByRole("checkbox").first().check();
     await page
       .getByRole("button", {
         name:
@@ -312,7 +321,7 @@ for (const mode of ["manual", "AI"]) {
     await panel.getByLabel(/I checked every proposition/).check();
     await panel
       .getByLabel("Proposition wording 1")
-      .fill("In 2024, London opened 2 schools.");
+      .fill("London opened 2 schools in 2024.");
     await expect(
       panel.getByRole("button", { name: "Approve & enable search" }),
     ).toBeDisabled();
@@ -323,14 +332,12 @@ for (const mode of ["manual", "AI"]) {
     await expect(
       page.getByText(/User-reviewed interpretations\. The original/),
     ).toBeVisible();
-    const atoms = page
-      .locator("section")
-      .filter({
-        has: page.getByRole("heading", {
-          name: "Atomic propositions",
-          exact: true,
-        }),
-      });
+    const atoms = page.locator("section").filter({
+      has: page.getByRole("heading", {
+        name: "Atomic propositions",
+        exact: true,
+      }),
+    });
     await atoms.getByRole("checkbox").first().check();
     await page.getByRole("button", { name: /Retrieve evidence/ }).click();
     await expect(
@@ -380,7 +387,9 @@ test("delete and clear require confirmation and refresh the library", async ({
   await expect(
     page.getByRole("button", { name: "Delete this video", exact: true }),
   ).toHaveCount(0);
-  await expect(page.locator(".notice")).toContainText(
-    "All uploaded videos and their associated runs cleared.",
-  );
+  await expect(
+    page.getByText("All uploaded videos and their associated runs cleared.", {
+      exact: true,
+    }),
+  ).toBeVisible();
 });
