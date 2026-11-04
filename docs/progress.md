@@ -437,8 +437,8 @@ Milestone 11 remains background jobs, caching and scalability; live video is Mil
 - [x] Checkpoints, queued cancellation, interrupted recovery and explicit retries.
 - [x] Queued/running work blocks destructive video deletion.
 - [x] Dashboard polling survives refresh; saved results can be reopened.
-- [x] Six focused job tests passed locally; browser refresh test added.
-- [ ] Full CI acceptance for Milestone 11 increment.
+- [x] Seven focused job tests passed locally; browser refresh test passed in CI.
+- [x] CI 41929952556: 309 backend tests, 10 frontend unit tests, 16 Playwright checks and Docker passed.
 - [ ] Async upload/audio extraction, separate workers/shared database coordination.
 - [ ] Freshness/version-aware result caching beyond request deduplication.
 - [ ] End-to-end automatic continuation after claim review and real-video evaluation.

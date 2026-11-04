@@ -25,3 +25,14 @@ Milestone 11 follow-ups; this increment must not be described as full scalabilit
 Validation: idempotency conflicts, queue limits, recovery, cancellation, sanitized
 failure, checkpoint retry, deletion exclusion, and real API integration with fake
 providers; browser refresh/progress test; full regression and Docker CI.
+
+## Acceptance results
+
+CI 41929952556 on code commit 8a2d9a331df8c3fd1ca87e3cb2c12b9506a8545c
+passed: 309 backend tests, 10 frontend unit tests, 16 Playwright checks, production
+build/typecheck and Docker smoke checks. Tests include background analysis across
+page reload and reopening exact saved decomposition, plus backend findings lineage,
+restart recovery, checkpoint retry, queue limits, cancellation and deletion exclusion.
+Tests use synthetic providers; no paid AI calls were made.
+
+The first increment is complete; the deferred work listed above remains Milestone 11.
