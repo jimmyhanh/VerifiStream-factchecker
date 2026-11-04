@@ -1039,3 +1039,31 @@ run. It preserves contradictions and unresolved items. Existing manual controls 
 Findings show experimental confidence bands and explain mapping failures, missing
 coverage and lack of decisive evidence. Insufficient Evidence remains a valid outcome,
 not a false verdict; the score measures evidence adequacy, not probability of truth.
+
+## Milestone 11: background jobs (first increment)
+
+The dashboard's **Background processing** panel offers **Analyze video in background**
+(transcription → claims → atomic decomposition, then pauses for review) and **Build
+findings in background** (ranking → verification → confidence from the selected mapping).
+Refresh or close the browser while the backend continues. Use **Open saved results**
+when a job finishes. Docker must remain running. Existing manual controls remain.
+
+Queued jobs can be cancelled. Running jobs block video deletion and cannot yet be
+cancelled safely. On backend restart, queued jobs resume; an in-progress job becomes
+Interrupted and requires **Retry unfinished stages**. Successful stage checkpoints are
+reused. A provider call interrupted before its checkpoint may have incurred cost and
+may be repeated on explicit retry. There is no automatic replay of interrupted calls.
+
+API: POST `/videos/{id}/jobs` returns 202 with `{key: UUID, action, input}`. GET the job
+or list `/videos/{id}/jobs` for progress. Actions also support individual transcript,
+claims, atoms, retrieval, mapping, ranking, verification and confidence stages. Supply
+explicit parent run IDs. A repeated key/input returns the same job; changed input is 409.
+Retry: POST `/videos/{id}/jobs/{job_id}/retry` with a new `{key: UUID}`. Cancel queued:
+POST `/videos/{id}/jobs/{job_id}/cancel`. No secrets belong in job input.
+
+This adapter supports **one Linux/Docker API process per storage directory**, enforced
+by an OS lock, and at most 100 queued/running jobs. No new dependency or `.env` setting
+is needed. Rebuild with `docker compose up --build -d`. Native Windows users should use
+Docker. Upload transfer/FFmpeg extraction still wait in the upload request. This is not
+yet a Redis queue, separate worker deployment, semantic cache or live-video feature.
+See [Milestone 11 plan and limitations](docs/milestone-11.md).

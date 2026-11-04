@@ -466,3 +466,32 @@ test("automatic screening labels evidence and builds confidence with exact reloa
     page.getByText("Evidence Confidence: 50%", { exact: true }),
   ).toBeVisible();
 });
+
+test("background analysis survives page reload and opens persisted claim results", async ({
+  page,
+}) => {
+  await upload(page);
+  const response = page.waitForResponse(
+    (r) => r.request().method() === "POST" && r.url().endsWith("/jobs"),
+  );
+  await page
+    .getByRole("button", { name: "Analyze video in background", exact: true })
+    .click();
+  expect((await response).status()).toBe(202);
+  await page.reload();
+  const jobs = page.getByRole("region", { name: "Background processing" });
+  await expect(
+    jobs.getByText("analyze · needs review", { exact: true }),
+  ).toBeVisible({ timeout: 15000 });
+  await jobs
+    .getByRole("button", { name: "Open saved results", exact: true })
+    .click();
+  await expect(
+    page.getByRole("heading", { name: "Atomic propositions", exact: true }),
+  ).toBeVisible();
+  await expect(
+    page
+      .getByText("In 2024, London opened 2 schools.", { exact: true })
+      .first(),
+  ).toBeVisible();
+});

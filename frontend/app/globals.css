@@ -1052,3 +1052,13 @@ code {
   padding: 10px 14px;
   background: #edf5f5;
 }
+.jobs-panel {
+  margin: 16px 0;
+  border: 2px solid #a2c4c5;
+}
+.job-card {
+  margin-top: 12px;
+  padding: 12px;
+  background: #f1f7f7;
+  border-radius: 8px;
+}
