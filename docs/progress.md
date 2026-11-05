@@ -444,3 +444,14 @@ Milestone 11 remains background jobs, caching and scalability; live video is Mil
 - [ ] End-to-end automatic continuation after claim review and real-video evaluation.
 
 Milestone 11 remains in progress; live processing is still Milestone 12.
+
+## Publisher-rating registry follow-up
+
+- [x] Validated domain-based registry with external attribution and original labels.
+- [x] Separate provider assessments; unrated/stale/unknown-date presentation.
+- [x] Evidence cards use current registry; Findings use immutable verification snapshots.
+- [x] No political bias scoring, invented ratings or changes to Evidence Confidence.
+- [x] Empty production registry; fictional examples confined to tests/documentation.
+- [x] Four focused backend tests passed; browser integration test added.
+- [ ] Full CI acceptance.
+- [ ] Obtain authorized real rating data and verify/import publisher associations.

@@ -9,6 +9,7 @@ class Settings(BaseModel):
     mapping_model: str = Field(default='', max_length=200)
     brave_search_api_key: SecretStr = SecretStr('')
     cors_origins: list[str] = ["http://localhost:3000", "http://127.0.0.1:3000"]
+    publisher_ratings_file: Path | None = None
     storage_root: Path = Path("storage")
     max_video_bytes: int = Field(default=500 * 1024 * 1024, gt=0)
     max_duration_seconds: int = Field(default=1800, gt=0)
@@ -31,6 +32,7 @@ class Settings(BaseModel):
             mapping_model=os.getenv("MAPPING_MODEL", ""),
             brave_search_api_key=os.getenv("BRAVE_SEARCH_API_KEY", ""),
             cors_origins=[s.strip() for s in os.getenv("CORS_ORIGINS", "http://localhost:3000,http://127.0.0.1:3000").split(",") if s.strip()],
+            publisher_ratings_file=os.getenv("PUBLISHER_RATINGS_FILE") or None,
             storage_root=os.getenv("STORAGE_ROOT", "storage"),
             max_video_bytes=os.getenv("MAX_VIDEO_BYTES", "524288000"),
             max_duration_seconds=os.getenv("MAX_DURATION_SECONDS", "1800"),

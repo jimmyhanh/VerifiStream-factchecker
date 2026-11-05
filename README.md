@@ -1067,3 +1067,16 @@ is needed. Rebuild with `docker compose up --build -d`. Native Windows users sho
 Docker. Upload transfer/FFmpeg extraction still wait in the upload request. This is not
 yet a Redis queue, separate worker deployment, semantic cache or live-video feature.
 See [Milestone 11 plan and limitations](docs/milestone-11.md).
+
+### Publisher reliability ratings
+
+Evidence and Findings now show attributed publication-level ratings separately from
+Evidence Confidence. The default registry is empty: **Unrated** means no rating data
+has been supplied, not low reliability. Different providers are shown separately with
+original labels, dates and methodology links; ratings do not change claim verdicts.
+
+To populate ratings, supply authorized data in `config/publisher-ratings.json`, following
+[the registry schema and setup guide](docs/publisher-ratings.md). Docker mounts this file
+read-only; restart the backend after registry changes. No provider subscription or API
+key is required for an empty registry, and no third-party dataset is bundled. New
+verification runs retain snapshots; old runs never silently adopt newer ratings.

@@ -495,3 +495,23 @@ test("background analysis survives page reload and opens persisted claim results
       .first(),
   ).toBeVisible();
 });
+
+test("publisher ratings show attribution and historical snapshot in findings", async ({
+  page,
+}) => {
+  await complete(page);
+  await expect(
+    page.getByText("Fictional evaluator: High", { exact: true }),
+  ).toBeVisible();
+  await expect(
+    page.getByText(/Saved with this verification · synthetic-browser-v1/),
+  ).toBeVisible();
+  await expect(
+    page.getByRole("link", { name: "Methodology", exact: true }),
+  ).toHaveAttribute("href", "https://ratings.example/method");
+  await expect(page.getByText(/Older assessment/)).toBeVisible();
+  await page.reload();
+  await expect(
+    page.getByText("Fictional evaluator: High", { exact: true }),
+  ).toBeVisible();
+});

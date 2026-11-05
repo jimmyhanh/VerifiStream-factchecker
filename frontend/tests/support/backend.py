@@ -72,7 +72,10 @@ class Speech:
 
 
 app = create_app(
-    Settings(storage_root=Path(_storage.name)),
+    Settings(
+        storage_root=Path(_storage.name),
+        publisher_ratings_file=Path(__file__).with_name("publisher-ratings.json"),
+    ),
     media=Media(),
     transcription_provider=Speech(),
     search_provider=Search(),

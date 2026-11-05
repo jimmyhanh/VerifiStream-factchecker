@@ -1062,3 +1062,15 @@ code {
   background: #f1f7f7;
   border-radius: 8px;
 }
+.publisher-rating {
+  padding: 14px;
+  margin: 12px 0;
+  border: 1px solid #9cbebe;
+  border-radius: 8px;
+  background: #f0f7f6;
+}
+.publisher-provider {
+  padding: 10px 0;
+  border-top: 1px solid #c6dada;
+  overflow-wrap: anywhere;
+}

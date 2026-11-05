@@ -2,6 +2,8 @@ from contextlib import asynccontextmanager
 import hashlib
 from pydantic import ValidationError, BaseModel
 from app.jobs.service import LocalJobs, Job, JobRequest
+from app.publishers.registry import PublisherRegistry
+import json
 from uuid import UUID
 from fastapi import FastAPI, Request, Query
 from fastapi.middleware.cors import CORSMiddleware
@@ -92,6 +94,7 @@ def create_app(
     suggestion_provider: SuggestionProvider | None = None,
 ) -> FastAPI:
     config = settings or Settings.from_env()
+    publisher_registry = PublisherRegistry(config.publisher_ratings_file)
     video_storage = storage or LocalVideoStorage(config.storage_root)
     video_repository = repository or JsonVideoRepository(config.storage_root)
     transcripts = transcript_repository or JsonTranscriptRepository(config.storage_root)
@@ -111,7 +114,8 @@ def create_app(
         confidence_algorithm or TransparentConfidenceAlgorithm())
     verification = VerificationService(video_repository, ranking_records,
         verification_records,
-        verification_policy or SelectedEvidencePolicy())
+        verification_policy or SelectedEvidencePolicy(),
+        rating_snapshot=lambda run: publisher_registry.snapshot(config.storage_root, run))
     ranking = RankingService(video_repository, mapping_records,
         ranking_records,
         ranking_algorithm or TransparentRankingAlgorithm())
@@ -215,6 +219,22 @@ def create_app(
             {"detail": {"code": "storage_error", "message": "Storage operation failed."}},
             status_code=503,
         )
+
+    @app.get('/publisher-ratings')
+    def publisher_rating(url: str = Query(max_length=2048)):
+        try: return publisher_registry.lookup(url)
+        except ValueError: raise ServiceError('invalid_source_url','Use an HTTP(S) publisher URL without credentials.',422)
+
+    @app.get('/videos/{video_id}/verifications/{run_id}/publisher-ratings')
+    def publisher_snapshot(video_id: UUID, run_id: UUID):
+        run = verification.get(video_id, run_id)
+        path = config.storage_root / str(video_id) / 'publisher-rating-snapshots' / f'{run_id}.json'
+        if not path.exists():
+            raise ServiceError('rating_snapshot_unavailable','No publisher-rating snapshot was captured for this verification.',404)
+        snapshot = json.loads(path.read_text())
+        if snapshot['verification_sha256'] != hashlib.sha256(run.model_dump_json().encode()).hexdigest():
+            raise ServiceError('rating_snapshot_mismatch','Rating snapshot does not match this verification.',409)
+        return snapshot
 
     @app.get("/health", response_model=HealthResponse)
     def health() -> HealthResponse:

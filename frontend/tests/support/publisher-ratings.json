@@ -1,0 +1,24 @@
+{
+  "version": "synthetic-browser-v1",
+  "publishers": [
+    {
+      "name": "Fictional test publisher",
+      "domains": [
+        "example.org"
+      ],
+      "domain_evidence_url": "https://example.org/about",
+      "ratings": [
+        {
+          "provider": "Fictional evaluator",
+          "original_label": "High",
+          "category": "High",
+          "rating_url": "https://ratings.example/review",
+          "methodology_url": "https://ratings.example/method",
+          "assessed_on": "2020-01-01",
+          "retrieved_at": "2020-02-01T00:00:00Z",
+          "reuse_basis": "Synthetic test data only"
+        }
+      ]
+    }
+  ]
+}
