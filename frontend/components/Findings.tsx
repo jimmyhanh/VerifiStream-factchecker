@@ -181,7 +181,11 @@ export default function Findings({ selected }: { selected: Selection }) {
                 {c.publication_date || "date unknown"} · {c.source_type} ·{" "}
                 {c.primary_secondary}
               </p>
-              <SourceAssessment source={c} />
+              <SourceAssessment
+                source={c}
+                url={c.url}
+                snapshotPath={`/videos/${verification.video_id}/verifications/${verification.id}/publisher-ratings`}
+              />
               <details>
                 <summary>Source provenance & caveats</summary>
                 <p className="small break">{c.url}</p>

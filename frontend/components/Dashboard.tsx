@@ -1091,7 +1091,12 @@ export default function Dashboard() {
                                 <span className="passage-text">{p.text}</span>
                               </span>
                             </label>
-                            {source && <SourceAssessment source={source} />}
+                            {source && (
+                              <SourceAssessment
+                                source={source}
+                                url={source.final_url}
+                              />
+                            )}
                             {source && (
                               <div className="passage-meta">
                                 <SourceLink url={source.final_url}>

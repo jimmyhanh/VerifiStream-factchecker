@@ -39,8 +39,9 @@ def validate_ranking(ranking: RankingRun, video_id: UUID) -> None:
 
 class VerificationService:
     def __init__(self, videos: VideoRepository, rankings: RankingRepository,
-                 repository: VerificationRepository, policy: VerificationPolicy):
+                 repository: VerificationRepository, policy: VerificationPolicy, rating_snapshot=None):
         self.videos,self.rankings,self.repository,self.policy=videos,rankings,repository,policy
+        self.rating_snapshot=rating_snapshot
         self.capacity=BoundedSemaphore(1)
 
     def _video(self,video_id: UUID) -> None:
@@ -84,6 +85,9 @@ class VerificationService:
             run.finished_at=utc_now()
             run.elapsed_seconds=round(time.monotonic()-started,3)
             self.repository.save(run)
+            if run.status=='completed' and self.rating_snapshot:
+                try: self.rating_snapshot(run)
+                except Exception: logger.error(json.dumps({'event':'publisher_snapshot_failed','run_id':str(run.id)}))
             logger.info(json.dumps({'event':'verification_finished','run_id':str(run.id),
                                    'status':run.status,'elapsed_seconds':run.elapsed_seconds}))
             return run

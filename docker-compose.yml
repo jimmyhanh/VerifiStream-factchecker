@@ -12,6 +12,7 @@ services:
       MAPPING_MODEL: ${MAPPING_MODEL:-}
       BRAVE_SEARCH_API_KEY: ${BRAVE_SEARCH_API_KEY:-}
       MAX_CLAIM_TRANSCRIPT_CHARS: ${MAX_CLAIM_TRANSCRIPT_CHARS:-100000}
+      PUBLISHER_RATINGS_FILE: /srv/config/publisher-ratings.json
       STORAGE_ROOT: /srv/storage
       MODEL_CACHE: /srv/storage/models
       TRANSCRIPTION_MODEL: ${TRANSCRIPTION_MODEL:-base}
@@ -24,6 +25,7 @@ services:
       MAX_CONCURRENT_UPLOADS: ${MAX_CONCURRENT_UPLOADS:-2}
     volumes:
       - media:/srv/storage
+      - ./config:/srv/config:ro
   frontend:
     build:
       context: ./frontend
