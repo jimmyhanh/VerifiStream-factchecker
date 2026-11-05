@@ -453,5 +453,5 @@ Milestone 11 remains in progress; live processing is still Milestone 12.
 - [x] No political bias scoring, invented ratings or changes to Evidence Confidence.
 - [x] Empty production registry; fictional examples confined to tests/documentation.
 - [x] Four focused backend tests passed; browser integration test added.
-- [ ] Full CI acceptance.
+- [x] CI 41939513660 passed on 3ccb57f: 313 backend tests, 10 frontend unit tests, 17 Playwright checks, production build/typecheck and Docker.
 - [ ] Obtain authorized real rating data and verify/import publisher associations.
