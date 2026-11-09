@@ -515,3 +515,17 @@ test("publisher ratings show attribution and historical snapshot in findings", a
     page.getByText("Fictional evaluator: High", { exact: true }),
   ).toBeVisible();
 });
+
+test("accepted upload restores the same video and unlocks transcription after refresh", async ({ page }) => {
+  const accepted = page.waitForResponse(r =>
+    r.request().method() === "POST" && r.url().includes("/videos?background=true"));
+  await upload(page);
+  const response = await accepted;
+  expect(response.status()).toBe(202);
+  const video = await response.json();
+  expect(video.status).toBe("queued");
+  await page.reload();
+  await expect(page).toHaveURL(new RegExp(video.id));
+  await expect(page.getByText("Audio ready for transcription", {exact: true})).toBeVisible();
+  await expect(page.getByRole("button", {name: "Transcribe video", exact: true})).toBeEnabled();
+});

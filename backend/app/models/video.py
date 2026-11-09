@@ -7,6 +7,7 @@ def utc_now() -> datetime:
     return datetime.now(timezone.utc)
 
 class VideoStatus(str, Enum):
+    queued = "queued"
     processing = "processing"
     completed = "completed"
     failed = "failed"
@@ -21,6 +22,7 @@ class ExtractionInfo(BaseModel):
 class VideoRecord(BaseModel):
     id: UUID
     status: VideoStatus = VideoStatus.processing
+    background_audio: bool = False
     original_filename: str
     size_bytes: int = Field(gt=0)
     sha256: str

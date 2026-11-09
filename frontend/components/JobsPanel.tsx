@@ -13,10 +13,14 @@ interface Job {
 }
 export default function JobsPanel({
   videoId,
+  audioReady,
+  onAudioRetry,
   mappingId,
   onRefresh,
 }: {
   videoId: string;
+  audioReady: boolean;
+  onAudioRetry: () => Promise<void>;
   mappingId?: string;
   onRefresh: () => Promise<void>;
 }) {
@@ -78,7 +82,7 @@ export default function JobsPanel({
         <button
           className="primary"
           disabled={
-            pending ||
+            !audioReady || pending ||
             jobs.some((j) => ["queued", "running"].includes(j.status))
           }
           onClick={() => void submit("analyze", {})}
@@ -118,7 +122,7 @@ export default function JobsPanel({
         <article key={job.id} className="job-card">
           <div className="row spread">
             <strong>
-              {job.request.action} · {job.status.replaceAll("_", " ")}
+              {job.request.action === "extract_audio" ? "Audio extraction" : job.request.action} · {job.status.replaceAll("_", " ")}
             </strong>
             <span>Stage: {job.stage.replaceAll("_", " ")}</span>
           </div>
@@ -157,11 +161,12 @@ export default function JobsPanel({
                 className="secondary"
                 disabled={pending}
                 onClick={() =>
-                  void perform(() =>
-                    api(`/videos/${videoId}/jobs/${job.id}/retry`, {
+                  void perform(async () => {
+                    await api(`/videos/${videoId}/jobs/${job.id}/retry`, {
                       key: crypto.randomUUID(),
-                    }),
-                  )
+                    });
+                    if (job.request.action === "extract_audio") await onAudioRetry();
+                  })
                 }
               >
                 Retry unfinished stages

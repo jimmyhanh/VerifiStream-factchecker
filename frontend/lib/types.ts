@@ -9,7 +9,9 @@ export interface BaseRun {
   error_code?: string | null;
   error_message?: string | null;
 }
-export interface Video extends BaseRun {
+export interface Video extends Omit<BaseRun, "status"> {
+  status: RunStatus | "queued";
+  background_audio?: boolean;
   original_filename: string;
   duration_seconds: number;
   size_bytes: number;

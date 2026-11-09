@@ -13,6 +13,7 @@ from app.shared.errors import ServiceError
 from app.videos.deletion import VideoActivity
 
 Action = Literal[
+    "extract_audio",
     "analyze",
     "findings",
     "transcript",
@@ -146,6 +147,13 @@ class LocalJobs:
         with self.mutex:
             return [j for j in reversed(self._all()) if j.video_id == video][:100]
 
+    def latest_audio(self, video: UUID) -> Job | None:
+        with self.mutex:
+            records = (Job.model_validate_json(p.read_text()) for p in
+                       (self.root / str(video) / "jobs").glob("*.json"))
+            return max((j for j in records if j.request.action == "extract_audio"),
+                       key=lambda j: (j.created_at, str(j.id)), default=None)
+
     def get(self, video: UUID, job_id: UUID) -> Job:
         try:
             return Job.model_validate_json(
@@ -174,6 +182,11 @@ class LocalJobs:
                             409,
                         )
                     return old
+            if request.action == "extract_audio" and any(
+                j.video_id == video and j.request.action == "extract_audio"
+                and j.status in ("queued", "running") for j in jobs
+            ):
+                raise ServiceError("audio_job_active", "Extraction is already scheduled.", 409)
             if sum(j.status in ("queued", "running") for j in jobs) >= 100:
                 raise ServiceError(
                     "queue_full", "Queue is full. Wait for work to finish.", 429

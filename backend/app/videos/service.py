@@ -27,6 +27,11 @@ class VideoService:
         self.media = media
 
     def upload(self, stream: BinaryIO, filename: str, content_type: str) -> VideoRecord:
+        record = self.store_upload(stream, filename, content_type)
+        return self.extract_audio(record)
+
+    def store_upload(self, stream: BinaryIO, filename: str, content_type: str,
+                     background: bool = False) -> VideoRecord:
         # Normalize only display metadata; local paths always come from the UUID.
         name = filename.replace("\\", "/").rsplit("/", 1)[-1]
         extension = Path(name).suffix.lower()
@@ -42,7 +47,8 @@ class VideoService:
             self.storage.remove(video_id)
             raise
         record = VideoRecord(
-            id=video_id, original_filename=name, size_bytes=size,
+            status=VideoStatus.queued if background else VideoStatus.processing,
+            background_audio=background, id=video_id, original_filename=name, size_bytes=size,
             sha256=digest, duration_seconds=duration,
         )
         try:
@@ -50,6 +56,15 @@ class VideoService:
         except Exception:
             self.storage.remove(video_id)
             raise
+        return record
+
+    def extract_audio(self, record: VideoRecord) -> VideoRecord:
+        video_id = record.id
+        record.status = VideoStatus.processing
+        record.error_code = record.error_message = None
+        if record.background_audio:
+            record.updated_at = utc_now()
+            self.repository.save(record)
         self._log(record, "extraction_started")
         try:
             record.extraction = self.media.extract(
