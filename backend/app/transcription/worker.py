@@ -2,7 +2,7 @@
 import json
 import sys
 import wave
-from app.transcription.identity import decoding_options, provenance
+from app.transcription.identity import decoding_options, provenance, snapshot_options
 from pathlib import Path
 
 
@@ -17,10 +17,7 @@ def transcribe(audio: Path, options: dict) -> dict:
         return {'error_code': 'unsupported_language'}
     try:
         # Cache reuse must also work offline after a successful first download.
-        repo = 'Systran/faster-whisper-' + options['model']
-        kwargs = dict(repo_id=repo, revision=options['revision'], cache_dir=options['cache'],
-                      allow_patterns=['config.json', 'model.bin', 'tokenizer.json',
-                                      'vocabulary.*', 'preprocessor_config.json'])
+        kwargs = snapshot_options(options['model'], options['revision'], Path(options['cache']))
         try:
             model_path = snapshot_download(**kwargs, local_files_only=True)
         except Exception:

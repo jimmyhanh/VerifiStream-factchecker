@@ -18,13 +18,18 @@ def provenance(model: str, revision: str, threads: int, language: str | None) ->
                                 tokenizer_version=version("tokenizers"), vad_version=version("onnxruntime")))
 
 
+def snapshot_options(model: str, revision: str, cache: Path) -> dict:
+    return dict(repo_id="Systran/faster-whisper-" + model, revision=revision,
+                cache_dir=str(cache.resolve()), allow_patterns=[
+                    "config.json", "model.bin", "tokenizer.json", "vocabulary.*", "preprocessor_config.json"])
+
+
 def cached_revision(model: str, revision: str, cache: Path) -> str | None:
     # Resolve aliases using the same local snapshot preference as the worker.
     # An immutable commit needs no model download to identify it.
     if re.fullmatch(r"[a-f0-9]{40}", revision):
         return revision
     from huggingface_hub import snapshot_download
-    path = snapshot_download(repo_id="Systran/faster-whisper-" + model, revision=revision,
-                             cache_dir=str(cache.resolve()), local_files_only=True)
+    path = snapshot_download(**snapshot_options(model, revision, cache), local_files_only=True)
     commit = Path(path).name
     return commit if re.fullmatch(r"[a-f0-9]{40}", commit) else None

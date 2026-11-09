@@ -124,6 +124,7 @@ test("selecting an earlier stage clears downstream results and history restores 
   const originalTranscript = await page
     .getByLabel("Transcript history")
     .inputValue();
+  await page.getByLabel(/Reuse matching transcript/).uncheck();
   await page
     .getByRole("button", { name: "Transcribe video", exact: true })
     .click();
