@@ -7,6 +7,7 @@ from app.models.video import utc_now
 
 class TranscriptRequest(BaseModel):
     model_config = ConfigDict(extra='forbid')
+    reuse_completed: bool = False
     language: str | None = Field(default=None, pattern=r'^[a-z]{2,3}$')
 
 

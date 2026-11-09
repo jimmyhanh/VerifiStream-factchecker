@@ -55,6 +55,16 @@ class Media:
 
 
 class Speech:
+    def reuse_identity(self, language):
+        return dict(
+            provider="synthetic-browser-fixture",
+            provider_version="v1",
+            model="fixture",
+            model_revision="fixture",
+            engine_version="fixture",
+            adapter_version="browser-v1", parameters={},
+        )
+
     def transcribe(self, audio, language):
         return TranscriptResult(
             language="en",
@@ -62,12 +72,7 @@ class Speech:
             segments=[
                 Segment(id=0, start=0, end=1, text="In 2024, London opened 2 schools.")
             ],
-            provider="synthetic-browser-fixture",
-            provider_version="v1",
-            model="fixture",
-            model_revision="fixture",
-            engine_version="fixture",
-            parameters={},
+            **self.reuse_identity(language),
         )
 
 

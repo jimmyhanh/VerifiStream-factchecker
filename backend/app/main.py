@@ -168,6 +168,8 @@ def create_app(
     def execute_job(job, checkpoint):
         def step(action, payload):
             schema, adapter = adapters[action]
+            if action == "transcript":
+                payload = {"reuse_completed": True, **payload}
             if action in job.outputs:
                 run = adapter.get(job.video_id, job.outputs[action])
                 if run.status not in ('completed','partial'):
@@ -370,10 +372,13 @@ def create_app(
     def get_video(video_id: UUID) -> VideoRecord:
         return audio_status(service.get(video_id))
 
-    @app.post('/videos/{video_id}/transcriptions', response_model=TranscriptRun, status_code=201)
-    def transcribe_video(video_id: UUID, request: TranscriptRequest) -> TranscriptRun:
-        """Create a new run; waits for completion. Send {} to auto-detect language."""
-        return transcription.create(video_id, request)
+    @app.post('/videos/{video_id}/transcriptions', response_model=TranscriptRun, status_code=201,
+              responses={200: {'model': TranscriptRun, 'description': 'Existing matching transcript'}})
+    def transcribe_video(video_id: UUID, request: TranscriptRequest, response: Response) -> TranscriptRun:
+        """Send {} for a fresh run with language detection. Set reuse_completed to accept an exact match."""
+        run, reused = transcription.create_or_reuse(video_id, request)
+        response.status_code = 200 if reused else 201
+        return run
 
     @app.get('/videos/{video_id}/transcriptions', response_model=list[TranscriptRun])
     def list_transcriptions(video_id: UUID) -> list[TranscriptRun]:

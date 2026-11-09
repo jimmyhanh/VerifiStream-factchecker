@@ -32,6 +32,8 @@ def test_real_speech_transcription_and_silence(tmp_path):
     assert record['result']['segments']
     assert record['result']['model_revision'] != 'main'
     assert client.get(url + '/transcript').json() == record
+    repeat = client.post(url + '/transcriptions', json={'language': 'en', 'reuse_completed': True})
+    assert repeat.status_code == 200 and repeat.json() == record
     # A separate silent input must not invent a statement.
     silent = video.model_copy(update={'id': uuid4()})
     JsonVideoRepository(tmp_path).save(silent)

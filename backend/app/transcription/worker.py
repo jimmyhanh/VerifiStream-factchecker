@@ -2,7 +2,7 @@
 import json
 import sys
 import wave
-from importlib.metadata import version
+from app.transcription.identity import decoding_options, provenance
 from pathlib import Path
 
 
@@ -33,9 +33,7 @@ def transcribe(audio: Path, options: dict) -> dict:
         with wave.open(str(audio), 'rb') as stream:
             duration = stream.getnframes() / stream.getframerate()
         segments, info = model.transcribe(
-            str(audio), language=options['language'], task='transcribe',
-            beam_size=5, temperature=0.0, vad_filter=True,
-            condition_on_previous_text=False,
+            str(audio), **decoding_options(options['language']),
         )
         items = []
         for segment in segments:
@@ -46,12 +44,8 @@ def transcribe(audio: Path, options: dict) -> dict:
                 items.append(dict(id=len(items), start=start, end=end, text=text))
         return dict(
             language=info.language if items else None, duration_seconds=duration,
-            segments=items, provider='faster-whisper', provider_version=version('faster-whisper'),
-            engine_version=version('ctranslate2'), model=repo,
-            model_revision=Path(model_path).name, adapter_version='faster-whisper-v1',
-            parameters=dict(device='cpu', compute_type='int8', beam_size=5, temperature=0.0,
-                            vad_filter=True, condition_on_previous_text=False,
-                            task='transcribe', language=options['language'], cpu_threads=options['threads']),
+            segments=items, **provenance(options['model'], Path(model_path).name,
+                                         options['threads'], options['language']),
         )
     except Exception:
         return {'error_code': 'transcription_failed'}
