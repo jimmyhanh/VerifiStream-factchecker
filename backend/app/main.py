@@ -4,8 +4,8 @@ from pydantic import ValidationError, BaseModel
 from app.jobs.service import LocalJobs, Job, JobRequest
 from app.publishers.registry import PublisherRegistry
 import json
-from uuid import UUID
-from fastapi import FastAPI, Request, Query
+from uuid import UUID, uuid4
+from fastapi import FastAPI, Request, Query, Response
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from starlette.concurrency import run_in_threadpool
@@ -13,7 +13,7 @@ from starlette.datastructures import UploadFile
 from app.api.limits import UploadLimits
 from app.database.repository import JsonVideoRepository, VideoRepository
 from app.media.ffmpeg import FFmpegProcessor, MediaProcessor
-from app.models.video import HealthResponse, VideoRecord, PublicConfiguration
+from app.models.video import HealthResponse, VideoRecord, VideoStatus, PublicConfiguration
 from app.shared.config import Settings
 from app.shared.errors import ServiceError
 from app.storage.local import LocalVideoStorage, VideoStorage
@@ -149,7 +149,13 @@ def create_app(
         'confidence': (ConfidenceRequest, confidence),
     }
     def validate_job(video_id, request):
-        service.get(video_id)
+        video = service.get(video_id)
+        if request.action == "extract_audio":
+            if not video.background_audio or request.input:
+                raise ServiceError("invalid_audio_job", "Expected a background upload and empty input.", 422)
+            return
+        if request.action in ("analyze", "transcript") and video.status != VideoStatus.completed:
+            raise ServiceError("audio_not_ready", "Wait for audio extraction before transcribing.", 409)
         action = 'transcript' if request.action == 'analyze' else 'ranking' if request.action == 'findings' else request.action
         try:
             parsed = adapters[action][0].model_validate(request.input)
@@ -173,6 +179,14 @@ def create_app(
                     raise ServiceError('job_stage_failed', 'Stage failed; inspect its saved run before retrying.', 422)
                 checkpoint(job, action, run.id)
             return run
+        if job.request.action == "extract_audio":
+            checkpoint(job, "extract_audio")
+            record = service.get(job.video_id)
+            if record.status != VideoStatus.completed:
+                record = service.extract_audio(record)
+            if record.status == VideoStatus.failed:
+                raise ServiceError(record.error_code, record.error_message)
+            return
         if job.request.action == 'analyze':
             transcript = step('transcript', job.request.input)
             claim = step('claims', {'transcript_run_id': transcript.id})
@@ -274,32 +288,61 @@ def create_app(
     def approve_propositions(video_id: UUID, request: ReviewRequest) -> DecompositionRun:
         return review.approve(video_id, request)
 
+    def audio_status(record: VideoRecord) -> VideoRecord:
+        if not record.background_audio or record.status == VideoStatus.completed:
+            return record
+        job = jobs.latest_audio(record.id)
+        if job and job.status == "completed":
+            return service.get(record.id)
+        if job and job.status in ("queued", "running"):
+            return record.model_copy(update={"status": VideoStatus.queued if job.status == "queued"
+                else VideoStatus.processing, "error_code": None, "error_message": None})
+        if record.status != VideoStatus.failed or not job or job.status != "failed":
+            code = (job.error_code or job.status) if job else "audio_job_missing"
+            return record.model_copy(update={"status": VideoStatus.failed, "error_code": code,
+                "error_message": f"Audio extraction did not finish ({code})."})
+        return record
+
+    def enqueue_upload(stream, filename, content_type) -> VideoRecord:
+        record = service.store_upload(stream, filename, content_type, background=True)
+        try:
+            jobs.submit(record.id, JobRequest(key=uuid4(), action="extract_audio"))
+        except Exception:
+            video_storage.remove(record.id)
+            raise
+        return record
+
     @app.get("/videos", response_model=list[VideoRecord])
     def list_videos(limit: int = Query(default=50, ge=1, le=100),
                     offset: int = Query(default=0, ge=0)) -> list[VideoRecord]:
-        return video_repository.list(limit, offset)
+        return [audio_status(record) for record in video_repository.list(limit, offset)]
 
     @app.post(
         "/videos", response_model=VideoRecord, status_code=201,
+        responses={202: {"model": VideoRecord, "description": "Audio extraction queued"}},
         openapi_extra={"requestBody": {"required": True, "content": {
             "multipart/form-data": {"schema": {"type": "object",
                 "required": ["file"], "properties": {
                     "file": {"type": "string", "format": "binary"}}}}}}},
     )
-    async def upload_video(request: Request) -> VideoRecord:
+    async def upload_video(request: Request, response: Response, background: bool = False) -> VideoRecord:
         if request.headers.get("content-type", "").split(";")[0].strip().lower() != "multipart/form-data":
             raise ServiceError("multipart_required", "Send multipart/form-data with one file field.", 415)
         async with request.form(max_files=1, max_fields=0) as form:
             uploaded = form.get("file")
             if not isinstance(uploaded, UploadFile) or not uploaded.filename or len(form) != 1:
                 raise ServiceError("file_required", "Provide exactly one video in the file field.")
+            if background:
+                response.status_code = 202
             return await run_in_threadpool(
-                service.upload, uploaded.file, uploaded.filename,
+                enqueue_upload if background else service.upload, uploaded.file, uploaded.filename,
                 uploaded.content_type or "application/octet-stream",
             )
 
     @app.post('/videos/{video_id}/jobs', response_model=Job, status_code=202)
     def submit_job(video_id: UUID, request: JobRequest):
+        if request.action == "extract_audio":
+            raise ServiceError("upload_job_only", "Use a background upload or retry its existing job.", 422)
         return jobs.submit(video_id, request)
 
     @app.get('/videos/{video_id}/jobs', response_model=list[Job])
@@ -325,7 +368,7 @@ def create_app(
 
     @app.get("/videos/{video_id}", response_model=VideoRecord)
     def get_video(video_id: UUID) -> VideoRecord:
-        return service.get(video_id)
+        return audio_status(service.get(video_id))
 
     @app.post('/videos/{video_id}/transcriptions', response_model=TranscriptRun, status_code=201)
     def transcribe_video(video_id: UUID, request: TranscriptRequest) -> TranscriptRun:

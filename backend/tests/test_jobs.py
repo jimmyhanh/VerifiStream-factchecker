@@ -278,3 +278,61 @@ def test_idle_scan_tolerates_concurrent_terminal_history_deletion(tmp_path,monke
         return original(path,*args,**kwargs)
     monkeypatch.setattr(Path,'read_text',read)
     assert queue._all()==[]
+
+
+def test_background_upload_returns_before_extraction_and_survives_refresh(tmp_path):
+    entered, release = Event(), Event()
+
+    class SlowMedia(FakeMedia):
+        def extract(self, source, target):
+            entered.set()
+            assert release.wait(5)
+            return super().extract(source, target)
+
+    settings = Settings(storage_root=tmp_path)
+    with TestClient(create_app(settings, media=SlowMedia())) as client:
+        response = client.post("/videos?background=true", files={"file": ("x.mp4", b"x", "video/mp4")})
+        assert response.status_code == 202, response.text
+        assert response.json()["status"] == "queued"
+        video = response.json()["id"]
+        try:
+            assert entered.wait(2)
+            assert client.get(f"/videos/{video}").json()["status"] == "processing"
+            assert client.delete(f"/videos/{video}").status_code == 409
+            assert client.post(f"/videos/{video}/jobs", json={"key":str(uuid4()), "action":"analyze"}).status_code == 409
+            job = client.get(f"/videos/{video}/jobs").json()[0]
+        finally:
+            release.set()
+        assert until(client, video, job["id"])["status"] == "completed"
+    with TestClient(create_app(settings, media=FakeMedia())) as restarted:
+        assert restarted.get(f"/videos/{video}").json()["status"] == "completed"
+        assert restarted.get("/videos").json()[0]["extraction"]["sample_rate"] == 16000
+
+
+def test_background_upload_rolls_back_without_worker(tmp_path):
+    client = TestClient(create_app(Settings(storage_root=tmp_path), media=FakeMedia()))
+    response = client.post("/videos?background=true", files={"file": ("x.mp4", b"x", "video/mp4")})
+    assert response.status_code == 503
+    assert client.get("/videos").json() == []
+
+
+def test_failed_audio_can_retry_without_another_upload(tmp_path):
+    from app.shared.errors import ServiceError
+
+    class FailOnce(FakeMedia):
+        failed = False
+
+        def extract(self, source, target):
+            if not self.failed:
+                self.failed = True
+                raise ServiceError("decode_failed", "Could not decode audio.")
+            return super().extract(source, target)
+
+    with TestClient(create_app(Settings(storage_root=tmp_path), media=FailOnce())) as client:
+        video = client.post("/videos?background=true", files={"file": ("x.mp4", b"x", "video/mp4")}).json()["id"]
+        job = client.get(f"/videos/{video}/jobs").json()[0]
+        assert until(client, video, job["id"])["error_code"] == "decode_failed"
+        assert client.get(f"/videos/{video}").json()["error_message"] == "Could not decode audio."
+        retry = client.post(f"/videos/{video}/jobs/{job['id']}/retry", json={"key":str(uuid4())}).json()
+        assert until(client, video, retry["id"])["status"] == "completed"
+        assert client.get(f"/videos/{video}").json()["error_code"] is None

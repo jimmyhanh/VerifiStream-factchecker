@@ -130,6 +130,27 @@ export default function Dashboard() {
       if (id) await open(await api<Video>(`/videos/${encodeURIComponent(id)}`));
     });
   }, []);
+  const audioPending = video?.status === "queued" || video?.status === "processing";
+  useEffect(() => {
+    if (!video || !audioPending) return;
+    const id = video.id;
+    let stopped = false;
+    let timer: ReturnType<typeof setTimeout>;
+    async function poll() {
+      try {
+        const next = await api<Video>(`/videos/${id}`);
+        if (stopped) return;
+        setVideo(current => current?.id === id ? next : current);
+        setVideos(items => items.map(item => item.id === id ? next : item));
+        if (next.status === "completed" || next.status === "failed") return;
+      } catch {
+        // A temporary network failure does not mean the extraction failed.
+      }
+      if (!stopped) timer = setTimeout(poll, 1500);
+    }
+    void poll();
+    return () => { stopped = true; clearTimeout(timer); };
+  }, [video?.id, audioPending]);
   function choose(stage: Stage, id: string) {
     const run = history[stage].find((r) => r.id === id);
     if (!run) return;
@@ -220,15 +241,11 @@ export default function Dashboard() {
       );
     const form = new FormData();
     form.append("file", file);
-    const created = await api<Video>("/videos", form);
+    const created = await api<Video>("/videos?background=true", form);
     await library();
     await open(created);
     setFile(undefined);
-    setMessage(
-      created.status === "completed"
-        ? "Video uploaded and audio extracted. You can now transcribe it."
-        : "Upload saved, but extraction did not complete. Inspect the error below.",
-    );
+    setMessage("Video saved. You can leave this page and return to the same upload.");
   }
   async function retrieve() {
     const input: {
@@ -520,16 +537,28 @@ export default function Dashboard() {
             {error}
           </div>
         )}
+        {video?.background_audio && !error && (
+          <p className="notice" role="status">
+            {video.status === "queued" ? "Queued for audio extraction" :
+             video.status === "processing" ? "Extracting audio…" :
+             video.status === "completed" ? "Audio ready for transcription" : "Audio extraction stopped"}
+          </p>
+        )}
         {video?.status === "failed" && tab !== 0 && (
           <p className="notice error" role="alert">
             Audio extraction failed: {video.error_message || video.error_code}.
-            Upload a corrected video to continue.
+            Check the job below for retry options, or upload a corrected video.
           </p>
         )}
         {video && (
           <JobsPanel
             key={video.id}
             videoId={video.id}
+            audioReady={video.status === "completed"}
+            onAudioRetry={async () => {
+              const updated = await api<Video>(`/videos/${video.id}`);
+              setVideo(current => current?.id === updated.id ? updated : current);
+            }}
             mappingId={selected.mapping?.id}
             onRefresh={() =>
               work("Loading saved job results…", () => open(video))
@@ -553,7 +582,7 @@ export default function Dashboard() {
                 <form
                   onSubmit={(e) => {
                     e.preventDefault();
-                    void work("Uploading video and extracting audio…", upload);
+                    void work("Uploading and validating video…", upload);
                   }}
                 >
                   <label className="upload-zone">

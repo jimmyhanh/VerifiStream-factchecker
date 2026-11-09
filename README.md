@@ -59,7 +59,24 @@ Allowed containers: MP4, MOV, WebM, MKV. Default maximum: 500 MiB and
 application/octet-stream is accepted for supported extensions, but FFprobe
 still validates the actual container/streams.
 
-POST waits for extraction and returns HTTP 201 with a created video resource:
+The dashboard uses `POST /videos?background=true`. Once the server has saved and
+validated the upload, it queues FFmpeg and returns **202** with a video ID and
+`status: queued`. You can now refresh or close the tab. Reopen the same video to
+see **Queued → Extracting audio → Audio ready for transcription**. Keep Docker
+running. A video without audio is rejected during validation. Queued jobs resume
+after restart; an interrupted extraction can be retried from Background processing.
+A full queue (429) or unavailable worker (503) rejects the background upload.
+
+To try it in PowerShell:
+
+```powershell
+curl.exe -F "file=@sample.mp4;type=video/mp4" "http://localhost:8000/videos?background=true"
+```
+
+Use the returned ID with `GET /videos/{video_id}` for audio readiness or
+`GET /videos/{video_id}/jobs` for extraction history.
+
+Without `background=true`, POST waits for extraction and returns HTTP 201:
 ```json
 {
   "id": " UUID ",
