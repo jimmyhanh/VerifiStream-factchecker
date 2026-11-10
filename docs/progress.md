@@ -465,5 +465,3 @@ Milestone 11 remains in progress; live processing is still Milestone 12.
 - [x] Dashboard reuse/force-fresh choice; background jobs retain the original transcript ID as the checkpoint.
 - [x] Direct API keeps fresh-run defaults; existing transcripts and downstream snapshots stay immutable.
 - [ ] Extend reuse beyond transcription with explicit evidence freshness policies.
-
-GitHub Pages demo: the standalone reader includes a playable fictional example and saved findings. The Docker upload pipeline remains separate. See [Pages setup](../github-pages/README.md).
