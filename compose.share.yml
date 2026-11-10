@@ -1,0 +1,25 @@
+# Overlay for a separate demo project (Docker Compose >= 2.24.4).
+services:
+  backend:
+    ports: !reset []
+    environment:
+      MAX_VIDEO_BYTES: 52428800
+  frontend:
+    ports: !reset []
+    build:
+      args:
+        NEXT_PUBLIC_API_BASE_URL: /api
+  gateway:
+    image: caddy:2-alpine
+    depends_on: [backend, frontend]
+    environment:
+      DEMO_PASSWORD_HASH: ${DEMO_PASSWORD_HASH:?Use deploy/share/start.ps1}
+    volumes:
+      - ./deploy/share/Caddyfile:/etc/caddy/Caddyfile:ro
+    ports:
+      - "127.0.0.1:8787:8080"
+  tunnel:
+    image: cloudflare/cloudflared:latest
+    command: tunnel --no-autoupdate --url http://gateway:8080
+    depends_on: [gateway]
+    profiles: [online]

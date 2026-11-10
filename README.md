@@ -1113,3 +1113,26 @@ used by the worker; this lookup does not download a model. Legacy runs lacking
 matching provenance, failed runs and unknown provider identities are cache misses.
 Reuse is scoped to one video ID; deleting the upload removes its transcript history.
 Other pipeline stages still run normally.
+
+### Share the full app online from Windows
+
+From PowerShell in this repository, with Docker Desktop running (Compose 2.24.4+
+and Linux containers), run `.\deploy\share\start.ps1`. The first build can take
+several minutes. Send the printed HTTPS link and username to a trusted demo guest;
+send the session password privately. No port forwarding, domain, hosting account
+or server rental is required. Keep the laptop awake, online and Docker running.
+If PowerShell blocks the repository script, review it first and use
+`powershell -ExecutionPolicy RemoteSigned -File .\deploy\share\start.ps1`.
+
+A temporary Cloudflare Quick Tunnel connects to a password-protected reverse
+proxy. Both the dashboard and API require the login. Each start rotates the password
+and requests a new temporary URL. Guests have full application access **inside the
+demo**, including uploads, deletes and any paid provider calls enabled by your
+.env. Start with a short clip under 50 MiB. The separate Compose project has its own
+media volume; your existing local library is neither shared nor copied. With no
+API keys you can still upload, transcribe and extract claims.
+
+To take the link offline, run `.\deploy\share\stop.ps1`. This keeps the demo
+data for the next session. This is for attended demos, not always-on production
+hosting. If the tunnel cannot connect on campus, try a network that permits
+Cloudflare Tunnel or ask campus IT. See https://developers.cloudflare.com/cloudflare-one/networks/connectors/cloudflare-tunnel/do-more-with-tunnels/trycloudflare/.

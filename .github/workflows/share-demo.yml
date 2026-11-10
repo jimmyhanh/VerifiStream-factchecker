@@ -1,0 +1,35 @@
+name: Shared demo smoke test
+on:
+  pull_request:
+    paths: ['deploy/share/**', 'compose.share.yml', 'docker-compose.yml', 'frontend/lib/api.ts', '.github/workflows/share-demo.yml']
+permissions:
+  contents: read
+jobs:
+  proxy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - name: Start isolated stack without an external tunnel and verify authentication
+        shell: pwsh
+        run: |
+          $output = ./deploy/share/start.ps1 -LocalOnly 6>&1
+          $log = $output | Out-String
+          if ($log -notmatch 'Session password: ([a-f0-9]{32})') { throw "No demo credentials" }
+          $password = $Matches[1]
+          $base = "http://127.0.0.1:8787"
+          foreach ($path in "/", "/api/health") {
+            $anonymous = Invoke-WebRequest ($base+$path) -SkipHttpErrorCheck
+            if ($anonymous.StatusCode -ne 401) { throw "Expected authentication at $path" }
+          }
+          $auth = [Convert]::ToBase64String([Text.Encoding]::ASCII.GetBytes("demo:$password"))
+          $headers = @{Authorization="Basic $auth"}
+          $page = Invoke-WebRequest $base -Headers $headers
+          if ($page.Content -notmatch 'Make every claim inspectable') { throw "Dashboard was not served" }
+          if ((Invoke-RestMethod "$base/api/health" -Headers $headers).status -ne 'ok') { throw "API unreachable" }
+          $denied = Invoke-WebRequest "$base/api/videos" -Method Post -Headers (@{"Sec-Fetch-Site"="cross-site"} + $headers) -SkipHttpErrorCheck
+          if ($denied.StatusCode -ne 403) { throw "Cross-site write allowed" }
+      - name: Stop isolated stack
+        if: always()
+        shell: pwsh
+        run: ./deploy/share/stop.ps1
