@@ -5,7 +5,7 @@ cd "$(dirname "$0")/.."
 dest="$(mktemp -d)"
 trap 'rm -rf "$dest"' EXIT
 mkdir -p "$dest/site"
-cp github-pages/{index.html,reader.css,reader.js} "$dest/site/"
+cp github-pages/{index.html,reports.html,config.js,video.js,reader.css,reader.js} "$dest/site/"
 if [[ -n "${NEXT_PUBLIC_API_BASE_URL:-}" ]]; then
   [[ "$NEXT_PUBLIC_API_BASE_URL" == https://* ]] || { echo "Set an HTTPS API URL"; exit 1; }
   mkdir "$dest/frontend"
@@ -17,7 +17,7 @@ if [[ -n "${NEXT_PUBLIC_API_BASE_URL:-}" ]]; then
   npm ci --no-audit --no-fund
   npm run build
   cp -R out "$dest/site/dashboard"
-  sed -i 's|<!-- LIVE_LINK -->|<a href="./dashboard/">Open live dashboard</a>|' "$dest/site/index.html"
+  node -e 'const fs = require("node:fs"); const url = new URL(process.env.NEXT_PUBLIC_API_BASE_URL); if (url.protocol !== "https:" || url.username || url.password || url.search || url.hash) throw Error("Expected a public HTTPS API base URL"); fs.writeFileSync(process.argv[1], "window.verifiStreamApi = " + JSON.stringify(url.href.replace(/\/+$/, "")) + ";\n")' "$dest/site/config.js"
   cd - >/dev/null
 fi
 touch "$dest/site/.nojekyll"

@@ -1,10 +1,26 @@
 <!doctype html>
-<html lang="en"><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
-<title>VerifiStream | Evidence reader</title>
-<link rel="stylesheet" href="./reader.css">
-<header><strong>VerifiStream</strong><span>Evidence reader</span></header>
-<main><h1>Review a finding.</h1>
-<p>Explore a sample or open a verification or confidence run exported from VerifiStream. Your file stays in this browser.</p>
-<div class="actions"><label>Open run JSON <input id="file" type="file" accept=".json,application/json"></label><button id="sample">View sample</button><!-- LIVE_LINK --></div>
-<p role="status" id="status"></p><section id="results" aria-label="Run findings"></section></main>
-<script src="./reader.js"></script></html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>VerifiStream | Video workspace</title>
+  <link rel="stylesheet" href="./reader.css">
+</head>
+<body>
+  <header><strong>VerifiStream</strong><a href="./reports.html">Open a saved report</a></header>
+  <main>
+    <h1>Check a video.</h1>
+    <p id="instructions">Choose a video to preview on this device. Transcription and fact-checking require a connected VerifiStream server.</p>
+    <form id="upload">
+      <label>Choose video <input id="video" type="file" accept=".mp4,.mov,.webm,.mkv" required></label>
+      <button id="submit" type="submit" hidden disabled>Upload and open dashboard</button>
+    </form>
+    <p role="status" id="status"></p>
+    <video controls hidden id="preview" preload="metadata" aria-label="Selected video preview"></video>
+    <p id="playback" role="status"></p>
+    <a id="dashboard" href="./dashboard/" hidden>Open existing videos</a>
+  </main>
+  <script src="./config.js"></script>
+  <script src="./video.js"></script>
+</body>
+</html>

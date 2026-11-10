@@ -1,5 +1,5 @@
 # VerifiStream for GitHub Pages
-The default edition opens completed verification and confidence JSON runs locally. The bundled sample uses fictional evidence. To export a run, use the download control in the original dashboard's Findings tab.
+Start by selecting an MP4, MOV, WebM, or MKV video. The default edition previews it locally. With a hosted API configured, upload the video and continue analysis in the dashboard. **Open a saved report** opens completed verification and confidence JSON runs locally. The bundled sample uses fictional evidence. To export a run, use the download control in the original dashboard's Findings tab.
 
 ## Publish
 Select **Settings → Pages → Build and deployment → Source → GitHub Actions**. Merge the Pages edition into main. The **Publish VerifiStream Pages** workflow publishes the site. You can also run it manually from Actions.
