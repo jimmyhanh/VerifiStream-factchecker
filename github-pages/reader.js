@@ -4,6 +4,12 @@ const sample = {status: "completed", results: [{
   explanation: "The updated timetable directly lists the extra session.",
   citations: [{title: "Illustrative workshop timetable", relationship: "supports",
     quote: "An additional workshop will meet on Saturday at 10 a.m."}]
+}, {
+  proposition_text: "The workshop doubled its capacity.",
+  evidence_status: "Insufficient Evidence",
+  explanation: "An extra session does not establish how many seats were available before or after. Both counts are needed to check whether capacity doubled.",
+  citations: [{title: "Illustrative workshop timetable", relationship: "context",
+    quote: "An additional workshop will meet on Saturday at 10 a.m."}]
 }]};
 const results = document.querySelector("#results");
 const statusLine = document.querySelector("#status");

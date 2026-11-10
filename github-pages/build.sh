@@ -5,7 +5,7 @@ cd "$(dirname "$0")/.."
 dest="$(mktemp -d)"
 trap 'rm -rf "$dest"' EXIT
 mkdir -p "$dest/site"
-cp github-pages/{index.html,reader.css,reader.js} "$dest/site/"
+cp github-pages/{index.html,reader.css,reader.js,workshop.webm,workshop.vtt} "$dest/site/"
 if [[ -n "${NEXT_PUBLIC_API_BASE_URL:-}" ]]; then
   [[ "$NEXT_PUBLIC_API_BASE_URL" == https://* ]] || { echo "Set an HTTPS API URL"; exit 1; }
   mkdir "$dest/frontend"
