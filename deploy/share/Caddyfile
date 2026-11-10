@@ -1,0 +1,22 @@
+:8080 {
+    route {
+        @crossSiteWrite {
+            method POST PUT PATCH DELETE
+            header Sec-Fetch-Site cross-site
+        }
+        respond @crossSiteWrite 403
+        basic_auth {
+            demo {$DEMO_PASSWORD_HASH}
+        }
+        handle_path /api/* {
+            reverse_proxy backend:8000 {
+                header_up -Authorization
+            }
+        }
+        handle {
+            reverse_proxy frontend:3000 {
+                header_up -Authorization
+            }
+        }
+    }
+}

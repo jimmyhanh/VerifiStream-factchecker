@@ -12,7 +12,7 @@ export async function api<T>(
     response = await fetch(`${API_BASE}${path}`, {
       method: method || (body === undefined ? "GET" : "POST"),
       cache: "no-store",
-      credentials: "omit",
+      credentials: API_BASE === "/api" ? "same-origin" : "omit",
       headers:
         body !== undefined && !(body instanceof FormData)
           ? { "Content-Type": "application/json" }
