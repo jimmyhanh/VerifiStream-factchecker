@@ -34,6 +34,10 @@ class TranscriptionService:
         return video
 
     def create(self, video_id: UUID, request: TranscriptRequest) -> TranscriptRun:
+        run, _ = self.create_or_reuse(video_id, request)
+        return run
+
+    def create_or_reuse(self, video_id: UUID, request: TranscriptRequest) -> tuple[TranscriptRun, bool]:
         video = self._video(video_id)
         if video.status != VideoStatus.completed:
             raise ServiceError('audio_not_ready', 'Video audio extraction is not completed.', 409)
@@ -54,6 +58,12 @@ class TranscriptionService:
                 raise ServiceError('invalid_audio', 'Extracted audio is invalid.', 409) from exc
             with audio.open('rb') as source:
                 digest = hashlib.file_digest(source, 'sha256').hexdigest()
+            if request.reuse_completed:
+                cached = self._matching_run(video_id, request.language, digest)
+                if cached is not None:
+                    logger.info(json.dumps({"event": "transcription_reused", "video_id": str(video_id),
+                                            "run_id": str(cached.id)}))
+                    return cached, True
             run = TranscriptRun(id=uuid4(), video_id=video_id,
                                 requested_language=request.language,
                                 requested_model=self.settings.transcription_model,
@@ -84,9 +94,33 @@ class TranscriptionService:
             logger.info(json.dumps({'event': 'transcription_finished', 'video_id': str(video_id),
                                     'run_id': str(run.id), 'status': run.status,
                                     'elapsed_seconds': run.elapsed_seconds, 'error_code': run.error_code}))
-            return run
+            return run, False
         finally:
             self.capacity.release()
+
+    def _matching_run(self, video_id: UUID, language: str | None, audio_sha256: str) -> TranscriptRun | None:
+        identify = getattr(self.provider, "reuse_identity", None)
+        if identify is None:
+            return None
+        try:
+            expected = identify(language)
+        except Exception:
+            # Identity lookup is optional; a missing model/cache/dependency must not
+            # turn a cache miss into a failed transcription request.
+            logger.info(json.dumps({"event": "transcription_identity_unavailable", "video_id": str(video_id)}))
+            return None
+        fields = {"provider", "provider_version", "model", "model_revision", "engine_version",
+                  "adapter_version", "parameters"}
+        if not isinstance(expected, dict) or set(expected) != fields:
+            return None
+        for run in self.transcripts.list(video_id):
+            if (run.video_id == video_id and run.status == "completed" and run.result is not None
+                    and run.audio_sha256 == audio_sha256 and run.requested_language == language
+                    and run.requested_model == self.settings.transcription_model
+                    and run.requested_revision == self.settings.transcription_revision
+                    and run.result.model_dump(include=fields) == expected):
+                return run
+        return None
 
     def list(self, video_id: UUID) -> list[TranscriptRun]:
         self._video(video_id)

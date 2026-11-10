@@ -1097,3 +1097,19 @@ To populate ratings, supply authorized data in `config/publisher-ratings.json`, 
 read-only; restart the backend after registry changes. No provider subscription or API
 key is required for an empty registry, and no third-party dataset is bundled. New
 verification runs retain snapshots; old runs never silently adopt newer ratings.
+
+**Milestone 11: reuse a completed transcript.** On the Transcript tab, leave
+**Reuse matching transcript** checked to reuse a completed run for this upload,
+or uncheck it to run speech recognition again. Background Analyze and Transcript
+jobs also try reuse by default; job input `{"reuse_completed":false}` forces a
+fresh run. Direct `POST /videos/{video_id}/transcriptions` remains fresh by
+default. Send `{"language":"en","reuse_completed":true}` to opt in: HTTP 200
+returns the original run (same ID, timestamps, and history); 201 creates a run.
+
+Reuse checks the saved WAV bytes, requested language (including auto-detect),
+model and requested revision, resolved model commit, provider/engine/adapter
+versions and decoding settings. Model aliases follow the locally cached revision
+used by the worker; this lookup does not download a model. Legacy runs lacking
+matching provenance, failed runs and unknown provider identities are cache misses.
+Reuse is scoped to one video ID; deleting the upload removes its transcript history.
+Other pipeline stages still run normally.

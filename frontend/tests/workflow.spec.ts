@@ -124,6 +124,7 @@ test("selecting an earlier stage clears downstream results and history restores 
   const originalTranscript = await page
     .getByLabel("Transcript history")
     .inputValue();
+  await page.getByLabel(/Reuse matching transcript/).uncheck();
   await page
     .getByRole("button", { name: "Transcribe video", exact: true })
     .click();
@@ -528,4 +529,25 @@ test("accepted upload restores the same video and unlocks transcription after re
   await expect(page).toHaveURL(new RegExp(video.id));
   await expect(page.getByText("Audio ready for transcription", {exact: true})).toBeVisible();
   await expect(page.getByRole("button", {name: "Transcribe video", exact: true})).toBeEnabled();
+});
+
+test("transcription can reuse the original run or explicitly create a fresh run", async ({ page }) => {
+  await upload(page);
+  const button = page.getByRole("button", {name: "Transcribe video", exact: true});
+  async function transcribe() {
+    const response = page.waitForResponse(r => r.request().method() === "POST" && r.url().endsWith("/transcriptions"));
+    await button.click();
+    return await response;
+  }
+  const first = await transcribe();
+  expect(first.status()).toBe(201);
+  const original = await first.json();
+  const hit = await transcribe();
+  expect(hit.status()).toBe(200);
+  expect((await hit.json()).id).toBe(original.id);
+  await expect(page.getByText("Reused the matching saved transcript. No new transcription ran.")).toBeVisible();
+  await page.getByLabel(/Reuse matching transcript/).uncheck();
+  const fresh = await transcribe();
+  expect(fresh.status()).toBe(201);
+  expect((await fresh.json()).id).not.toBe(original.id);
 });

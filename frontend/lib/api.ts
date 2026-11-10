@@ -5,6 +5,7 @@ export async function api<T>(
   path: string,
   body?: object | FormData,
   method?: "GET" | "POST" | "DELETE",
+  onStatus?: (status: number) => void,
 ): Promise<T> {
   let response: Response;
   try {
@@ -45,6 +46,7 @@ export async function api<T>(
     throw new Error(
       "The backend returned an unreadable response. Refresh saved runs before retrying.",
     );
+  onStatus?.(response.status);
   return payload as T;
 }
 export function safeLink(value: string): string | undefined {

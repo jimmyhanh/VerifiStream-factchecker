@@ -177,3 +177,82 @@ def test_busy_and_capacity_released_after_failure(setup):
     assert caught.value.code == 'transcription_busy'
     service.capacity.release()
     assert service.create(video.id, TranscriptRequest()).status == 'completed'
+
+
+class IdentifiedProvider:
+    calls = 0
+    revision = 'commit-a'
+
+    def reuse_identity(self, language):
+        return dict(provider='known', provider_version='1', engine_version='1', model='fixture',
+                    model_revision=self.revision, adapter_version='test-v1', parameters={'language': language})
+
+    def transcribe(self, audio, language):
+        self.calls += 1
+        return result().model_copy(update=self.reuse_identity(language))
+
+
+def test_reuse_survives_restart_and_preserves_history(setup):
+    provider = IdentifiedProvider()
+    url = f'/videos/{setup[1].id}/transcriptions'
+    fresh = client_for(setup, provider).post(url, json={}).json()
+    client = client_for(setup, provider)
+    hit = client.post(url, json={'reuse_completed': True})
+    assert hit.status_code == 200 and hit.json() == fresh
+    assert provider.calls == 1 and client.get(url).json() == [fresh]
+    forced = client.post(url, json={'reuse_completed': False})
+    assert forced.status_code == 201 and forced.json()['id'] != fresh['id']
+    assert provider.calls == 2
+
+
+def test_reuse_invalidates_on_input_or_identity_change(setup):
+    settings, video, _ = setup
+    provider = IdentifiedProvider()
+    url = f'/videos/{video.id}/transcriptions'
+    client = client_for(setup, provider)
+    body = {'reuse_completed': True}
+    assert client.post(url, json=body).status_code == 201
+    en = dict(**body, language='en')
+    assert client.post(url, json=en).status_code == 201
+    provider.revision = 'commit-b'
+    assert client.post(url, json=en).status_code == 201
+    wav = settings.storage_root / str(video.id) / 'audio.wav'
+    data = wav.read_bytes()
+    wav.write_bytes(data[:-2] + b'\1\0')
+    assert client.post(url, json=en).status_code == 201
+    assert client.post(url, json=en).status_code == 200
+    assert provider.calls == 4
+
+
+def test_unidentified_provider_and_failed_runs_do_not_hit(setup):
+    url = f'/videos/{setup[1].id}/transcriptions'
+    body = {'reuse_completed': True}
+    client = client_for(setup)
+    assert all(client.post(url, json=body).status_code == 201 for _ in range(2))
+
+    class Flaky(IdentifiedProvider):
+        def transcribe(self, audio, language):
+            if self.calls == 0:
+                self.calls += 1
+                raise ServiceError('transcription_failed', 'Failed')
+            return super().transcribe(audio, language)
+
+    provider = Flaky()
+    client = client_for(setup, provider)
+    assert client.post(url, json=body).json()['status'] == 'failed'
+    assert client.post(url, json=body).status_code == 201
+    assert client.post(url, json=body).status_code == 200
+    assert provider.calls == 2
+
+
+def test_background_analyze_reuses_transcript_checkpoint(setup):
+    from test_jobs import until
+
+    provider = IdentifiedProvider()
+    root = f'/videos/{setup[1].id}'
+    with client_for(setup, provider) as client:
+        run = client.post(root + '/transcriptions', json={}).json()
+        job = client.post(root + '/jobs', json={'action': 'analyze', 'key': str(uuid4())}).json()
+        done = until(client, setup[1].id, job['id'])
+        assert done['outputs']['transcript'] == run['id']
+        assert provider.calls == 1

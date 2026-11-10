@@ -458,3 +458,10 @@ Milestone 11 remains in progress; live processing is still Milestone 12.
 - [x] Four focused backend tests passed; browser integration test added.
 - [x] CI 41939513660 passed on 3ccb57f: 313 backend tests, 10 frontend unit tests, 17 Playwright checks, production build/typecheck and Docker.
 - [ ] Obtain authorized real rating data and verify/import publisher associations.
+
+## Milestone 11 — transcription reuse
+
+- [x] Reuse completed runs only for the same upload, audio hash, language, model revision and inference configuration.
+- [x] Dashboard reuse/force-fresh choice; background jobs retain the original transcript ID as the checkpoint.
+- [x] Direct API keeps fresh-run defaults; existing transcripts and downstream snapshots stay immutable.
+- [ ] Extend reuse beyond transcription with explicit evidence freshness policies.

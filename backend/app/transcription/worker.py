@@ -2,7 +2,7 @@
 import json
 import sys
 import wave
-from importlib.metadata import version
+from app.transcription.identity import decoding_options, provenance, snapshot_options
 from pathlib import Path
 
 
@@ -17,10 +17,7 @@ def transcribe(audio: Path, options: dict) -> dict:
         return {'error_code': 'unsupported_language'}
     try:
         # Cache reuse must also work offline after a successful first download.
-        repo = 'Systran/faster-whisper-' + options['model']
-        kwargs = dict(repo_id=repo, revision=options['revision'], cache_dir=options['cache'],
-                      allow_patterns=['config.json', 'model.bin', 'tokenizer.json',
-                                      'vocabulary.*', 'preprocessor_config.json'])
+        kwargs = snapshot_options(options['model'], options['revision'], Path(options['cache']))
         try:
             model_path = snapshot_download(**kwargs, local_files_only=True)
         except Exception:
@@ -33,9 +30,7 @@ def transcribe(audio: Path, options: dict) -> dict:
         with wave.open(str(audio), 'rb') as stream:
             duration = stream.getnframes() / stream.getframerate()
         segments, info = model.transcribe(
-            str(audio), language=options['language'], task='transcribe',
-            beam_size=5, temperature=0.0, vad_filter=True,
-            condition_on_previous_text=False,
+            str(audio), **decoding_options(options['language']),
         )
         items = []
         for segment in segments:
@@ -46,12 +41,8 @@ def transcribe(audio: Path, options: dict) -> dict:
                 items.append(dict(id=len(items), start=start, end=end, text=text))
         return dict(
             language=info.language if items else None, duration_seconds=duration,
-            segments=items, provider='faster-whisper', provider_version=version('faster-whisper'),
-            engine_version=version('ctranslate2'), model=repo,
-            model_revision=Path(model_path).name, adapter_version='faster-whisper-v1',
-            parameters=dict(device='cpu', compute_type='int8', beam_size=5, temperature=0.0,
-                            vad_filter=True, condition_on_previous_text=False,
-                            task='transcribe', language=options['language'], cpu_threads=options['threads']),
+            segments=items, **provenance(options['model'], Path(model_path).name,
+                                         options['threads'], options['language']),
         )
     except Exception:
         return {'error_code': 'transcription_failed'}

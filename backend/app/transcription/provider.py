@@ -19,6 +19,14 @@ class FasterWhisperProvider:
     def __init__(self, settings: Settings):
         self.settings = settings
 
+    def reuse_identity(self, language: str | None) -> dict | None:
+        from app.transcription.identity import cached_revision, provenance
+        revision = cached_revision(self.settings.transcription_model, self.settings.transcription_revision,
+                                   self.settings.model_cache)
+        if revision is None:
+            return None
+        return provenance(self.settings.transcription_model, revision, self.settings.transcription_threads, language)
+
     def transcribe(self, audio: Path, language: str | None) -> TranscriptResult:
         options = {
             'model': self.settings.transcription_model,

@@ -52,6 +52,7 @@ export default function Dashboard() {
   const [mode, setMode] = useState<"search" | "manual_urls">("search");
   const [reviewTarget, setReviewTarget] = useState<string[]>([]);
   const [autoScreen, setAutoScreen] = useState(true);
+  const [reuseTranscript, setReuseTranscript] = useState(true);
   const locked = useRef(false);
   const historyRef = useRef(history);
   historyRef.current = history;
@@ -165,13 +166,14 @@ export default function Dashboard() {
   }
   async function create<K extends Stage>(stage: K, body: object) {
     if (!video) throw new Error("Choose a video first.");
+    let reused = false;
     const run = await api<Runs[K]>(
       `/videos/${video.id}/${endpoints[stage]}`,
-      body,
+      body, undefined, (status) => { reused = stage === "transcript" && status === 200; },
     );
     const next = {
       ...historyRef.current,
-      [stage]: [run, ...historyRef.current[stage]],
+      [stage]: [run, ...historyRef.current[stage].filter((item) => item.id !== run.id)],
     } as History;
     historyRef.current = next;
     setHistory(next);
@@ -179,7 +181,7 @@ export default function Dashboard() {
     clearChoices();
     setTab(stageTab[stage]);
     setMessage(
-      run.status === "failed"
+      reused ? "Reused the matching saved transcript. No new transcription ran." : run.status === "failed"
         ? "Run saved with errors. Inspect its details before trying again."
         : run.status === "partial"
           ? "Run saved with partial results. Inspect unresolved passages."
@@ -661,12 +663,17 @@ export default function Dashboard() {
                     claims.
                   </p>
                 </div>
+                <label>
+                  <input type="checkbox" checked={reuseTranscript}
+                    onChange={(event) => setReuseTranscript(event.target.checked)} />
+                  Reuse matching transcript (uncheck for fresh transcription)
+                </label>
                 <button
                   className="primary"
                   disabled={video?.status !== "completed"}
                   onClick={() =>
                     void work("Transcribing audio…", () =>
-                      create("transcript", {}),
+                      create("transcript", {reuse_completed: reuseTranscript}),
                     )
                   }
                 >
